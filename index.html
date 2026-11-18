@@ -55,6 +55,13 @@ svg.ic{width:1em;height:1em;vertical-align:-.15em;flex:none}
 .groundShadow{position:absolute;left:50%;bottom:-8px;width:60%;height:34px;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(0,0,0,.45),rgba(0,0,0,0) 70%)}
 .subPlaque{margin-top:6px;background:linear-gradient(180deg,var(--woodXL),var(--woodL));border:3px solid var(--woodD);border-radius:999px;padding:4px 16px;font-weight:600;font-size:15px;color:var(--ink);box-shadow:0 4px 0 rgba(0,0,0,.3);opacity:0;transform:scale(.8);transition:.4s}
 .subPlaque.show{opacity:1;transform:none}
+.langRow{display:flex;gap:8px;justify-content:center;margin-top:12px;opacity:0;transition:opacity .4s}
+#startBtn.show ~ .langRow{opacity:1}
+.langRow button,.langPick button{border:3px solid var(--woodD);background:rgba(255,243,220,.92);border-radius:999px;padding:5px 12px;font-size:15px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:5px}
+.langRow button.on,.langPick button.on{background:linear-gradient(180deg,#ffd76a,var(--gold));box-shadow:0 3px 0 var(--goldD)}
+#langBtn{position:fixed;top:10px;right:114px;z-index:50;font-size:22px}
+body:has(#splash:not(.hidden)) #langBtn,body:has(#game:not(.hidden)) #langBtn,body:has(#end:not(.hidden)) #langBtn{display:none}
+.langPick{display:flex;flex-direction:column;gap:10px}.langPick button{justify-content:center;font-size:18px;padding:10px}
 .byline{color:#fff3dc;font-size:15px;font-weight:500;letter-spacing:.5px;text-shadow:0 2px 3px rgba(0,0,0,.7);opacity:0;transition:opacity .6s}
 .byline b{font-weight:700;color:var(--gold)}
 .byline.show{opacity:1}
@@ -112,8 +119,9 @@ h2{font-size:19px;margin:0 0 8px}
 .btn.ghost{background:rgba(255,243,220,.15);color:var(--cream);border:2px solid rgba(255,243,220,.45);font-size:16px;padding:11px}
 /* menu principal */
 #home{display:flex;flex-direction:column;min-height:calc(100vh - 24px);padding-bottom:84px}
-.topbar{display:flex;align-items:center;gap:8px;padding-right:108px}
-.topbar .chip{margin-left:0;max-width:44%}
+.topbar{display:flex;align-items:center;gap:6px;padding-right:162px}
+.topbar .chip{margin-left:0;max-width:40%}
+.topbar .chip:not(.solo){padding:3px}.topbar .chip:not(.solo) span{display:none}
 .topbar .pill{font-size:15px;padding:3px 10px}
 .menuLogo{display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:10px}
 .menuLogo .trow .block{width:32px;height:37px;font-size:23px;opacity:1;transform:none}
@@ -143,7 +151,7 @@ h2{font-size:19px;margin:0 0 8px}
 
 /* JOGO */
 #game{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 10px calc(14px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto}
-.hud{display:flex;gap:8px;padding-right:108px;align-items:center;flex:none}
+.hud{display:flex;gap:8px;padding-right:162px;align-items:center;flex:none}
 .pill{border-radius:999px;padding:4px 12px;font-size:19px;font-weight:700;display:flex;align-items:center;gap:5px;color:var(--ink)}
 .pill.low{background:linear-gradient(180deg,#ff8a7a,#e6453a);color:#fff;border-color:#8e1f17;animation:blinkT .5s steps(2) infinite,pulse .5s infinite alternate;position:relative}
 .pill.low:after{content:"!";position:absolute;right:-14px;top:-12px;width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--ink);border:2px solid var(--woodD);font-size:16px;display:flex;align-items:center;justify-content:center;animation:pop .5s infinite alternate}
@@ -305,6 +313,7 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
 <body>
 <div class="bgimg" id="bgimg"></div>
 <div id="fader"></div>
+<button class="rbtn langBtn" id="langBtn" aria-label="Idioma"></button>
 <button class="rbtn" id="musicBtn" aria-label="Música"></button>
 <button class="rbtn" id="sfxBtn" aria-label="Efeitos sonoros"></button>
 
@@ -318,6 +327,7 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
   </div>
   <div class="stageSplash"><div class="groundShadow"></div><div class="apeWrap"><img id="splashApe" alt="Professor orangotango"><div class="bfly" id="sbfly"></div></div></div>
   <button class="btn gold" id="startBtn"></button>
+  <div class="langRow" id="langRow"></div>
   <div class="loadNote" id="loadNote"></div>
 </div>
 
@@ -367,6 +377,11 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
   <button data-nav="avatar"></button>
 </nav>
 
+<!-- idioma -->
+<div class="overlay hidden" id="langBox">
+  <div class="card center"><h2>🌎</h2><div class="langPick" id="langPick"></div>
+  <button class="btn ghost" id="langClose" style="color:var(--muted);border-color:#e0c99f;margin-top:10px">✕</button></div>
+</div>
 <!-- entrar ou convidado -->
 <div class="overlay hidden" id="loginBox">
   <div class="card center">
@@ -449,7 +464,7 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
   <div class="tutHole" id="tutHole"></div>
   <div class="tutHand hidden" id="tutHand">👆</div>
   <div class="tutArrow hidden" id="tutArrow">⬆</div>
-  <div class="tutBox" id="tutBox"><b class="tutName">Professor Zantar</b><div id="tutText"></div>
+  <div class="tutBox" id="tutBox"><b class="tutName">Professor Papius</b><div id="tutText"></div>
     <div class="tutBtns"><button class="btn ghost tutSkip" id="tutSkip">Pular</button><button class="btn gold" id="tutNext">Próximo</button></div></div>
 </div>
 <div id="hostSay"></div>
@@ -491,6 +506,217 @@ const firebaseConfig = {
   messagingSenderId: "142229204326",
   appId: "1:142229204326:web:551607933afd25303b6ca7"
 };
+/* ================= IDIOMAS ================= */
+const LANGS = {
+  pt: { flag: "🇧🇷", name: "Português", speech: "pt-BR", tz: "America/Sao_Paulo", strip: true, re: /^[a-záàâãéêíóôõúüç]+$/,
+        freq: ["https://cdn.jsdelivr.net/gh/hermitdave/FrequencyWords@master/content/2018/pt_br/pt_br_50k.txt","https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/pt_br/pt_br_50k.txt"] },
+  en: { flag: "🇺🇸", name: "English", speech: "en-US", tz: "America/New_York", strip: true, re: /^[a-z]+$/,
+        freq: ["https://cdn.jsdelivr.net/gh/hermitdave/FrequencyWords@master/content/2018/en/en_50k.txt","https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_50k.txt"] },
+  hu: { flag: "🇭🇺", name: "Magyar", speech: "hu-HU", tz: "Europe/Budapest", strip: false, re: /^[a-záéíóöőúüű]+$/,
+        freq: ["https://cdn.jsdelivr.net/gh/hermitdave/FrequencyWords@master/content/2018/hu/hu_50k.txt","https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/hu/hu_50k.txt"] }
+};
+const LANG_ID = (() => {
+  let l = null; try{ l = localStorage.getItem("fp_lang"); }catch(e){}
+  if (LANGS[l]) return l;
+  const n = (navigator.language || "pt").slice(0, 2).toLowerCase();
+  return LANGS[n] ? n : "pt";
+})();
+const LANG = LANGS[LANG_ID];
+document.documentElement.lang = LANG_ID === "pt" ? "pt-BR" : LANG_ID;
+// nomes de campos/coleções separados por idioma (o português continua com os nomes antigos)
+const F = name => LANG_ID === "pt" ? name : name + "_" + LANG_ID;
+const LK = id => LANG_ID === "pt" ? id : LANG_ID + "-" + id;
+
+/* ---- traduções da interface (o texto original é o português) ---- */
+const TXT = {
+  en: [
+    ["Jogo de palavras por voz", "Word game you play by voice"],
+    ["▶ Começar", "▶ Start"], ["Começar", "Start"],
+    ["Carregando palavras…", "Loading words…"], ["Carregando…", "Loading…"],
+    ["⚠️ Não consegui carregar a lista de palavras. Recarregue a página.", "⚠️ Couldn't load the word list. Please reload the page."],
+    ["⚠️ Problema ao preparar as palavras. Recarregue a página.", "⚠️ Problem preparing the words. Please reload the page."],
+    ["Ainda carregando as palavras, tente de novo em alguns segundos.", "Still loading the words, try again in a few seconds."],
+    ["Mesmas letras pra todo mundo hoje. Vale sua melhor rodada. O 1º lugar ganha a moldura de ouro amanhã!", "Same letters for everyone today. Your best round counts. 1st place wins the gold frame tomorrow!"],
+    ["Soma dos pontos da semana. O 1º lugar ganha a moldura de diamante na semana que vem!", "Total points this week. 1st place wins the diamond frame next week!"],
+    ["Soma dos pontos de todas as rodadas. Quanto mais joga, mais sobe!", "Total points from all rounds. The more you play, the higher you go!"],
+    ["Mesmas letras pra todo mundo", "Same letters for everyone"],
+    ["Desafio do dia", "Daily challenge"], ["palavras cruzadas", "crossword"], ["letras", "letters"],
+    ["Campeão de ontem", "Yesterday's champion"], ["Campeão da semana", "Champion of the week"], ["Pode ser você!", "It could be you!"],
+    ["média por rodada", "average per round"], ["média de hoje", "today's average"],
+    ["Não consegui carregar o ranking.", "Couldn't load the ranking."], ["Ninguém jogou ainda. Seja o primeiro!", "No one has played yet. Be the first!"],
+    ["Como você quer jogar?", "How do you want to play?"], ["Entrar com Google", "Sign in with Google"], ["Jogar como convidado", "Play as guest"],
+    ["Como convidado, seu progresso fica salvo só neste aparelho e você não aparece no ranking.", "As a guest, your progress is saved only on this device and you won't appear in the ranking."],
+    ["Montar avatar", "Create avatar"], ["Convidado", "Guest"],
+    ["Seu avatar", "Your avatar"], ["Seu nome", "Your name"], ["Como vai aparecer no ranking", "How you'll appear in the ranking"],
+    ["Salvar e jogar", "Save and play"], ["Voltar", "Back"], ["Sair da conta", "Sign out"], ["Sair do modo convidado", "Leave guest mode"],
+    ["Coloque seu nome 🙂", "Type your name 🙂"],
+    ["Acabou o tempo!", "Time's up!"], ["Quer mais 20 segundos?", "Want 20 more seconds?"], ["Assistir vídeo (+20s)", "Watch video (+20s)"],
+    ["Encerrar rodada", "End round"], ["Versão de teste: o tempo extra é liberado sem anúncio de verdade.", "Test version: extra time is given without a real ad."],
+    ["Palavras que valem, mas não estão no tabuleiro. Valem os mesmos pontos.", "Valid words that aren't on the board. They're worth the same points."],
+    ["Palavras bônus", "Bonus words"], ["Fechar", "Close"], ["Nenhuma ainda.", "None yet."],
+    ["Conquistas novas!", "New achievements!"], ["As palavras da rodada", "This round's words"], ["Palavras que faltaram", "Words you missed"],
+    ["Nenhuma! Você achou todas.", "None! You found them all."], ["Nenhum bônus desta vez.", "No bonus this time."],
+    ["Alguma palavra deu errado?", "Did a word go wrong?"], ["Escreva a palavra e diga se ela deveria valer ou não. A gente revisa!", "Type the word and tell us if it should count or not. We'll review it!"],
+    ["Deveria valer", "Should count"], ["Não deveria valer", "Shouldn't count"], ["Obrigado! Recebemos.", "Thanks! Got it."], ["Não consegui enviar agora.", "Couldn't send right now."],
+    ["Salvando no ranking…", "Saving to the ranking…"], ["Salvo no ranking!", "Saved to the ranking!"],
+    ["Progresso salvo neste aparelho. Entre com Google pra aparecer no ranking!", "Progress saved on this device. Sign in with Google to appear in the ranking!"],
+    ["Você completou o tabuleiro!", "You completed the board!"], ["Tabuleiro completo", "Board complete"],
+    ["Jogar de novo", "Play again"], ["Tentar de novo", "Try again"], ["Próxima fase", "Next level"], ["Menu principal", "Main menu"],
+    ["Pular", "Skip"], ["Próximo", "Next"], ["Ouvindo", "Listening"], ["pontos", "points"], ["Início", "Home"], ["Avatar", "Avatar"],
+    ["Hoje", "Today"], ["Semana", "Week"], ["Geral", "All time"], ["Entrar", "Sign in"],
+    ["Boa!", "Nice!"], ["Isso aí!", "That's it!"], ["Mandou bem!", "Well done!"], ["Que palavrão!", "What a word!"], ["Uau!", "Wow!"], ["Essa é das boas!", "That's a good one!"],
+    ["Essa também vale!", "That one counts too!"], ["Essa você já falou!", "You already said that one!"],
+    ["Tô esperando…", "I'm waiting…"], ["Dica: começa pelas de 3 letras!", "Tip: start with the 3-letter words!"], ["Corre! Tá acabando!", "Hurry! Time's running out!"],
+    ["Hoje tem desafio novo!", "There's a new challenge today!"], ["Será que você bate o recorde?", "Can you beat the record?"], ["Bora jogar?", "Shall we play?"],
+    ["Você achou a maior palavra, parabéns!", "You found the longest word, congrats!"], ["Pegou o grilo! Pontos em dobro!", "You caught the cricket! Double points!"],
+    ["Pode falar!", "Go ahead, speak!"], ["Arraste o dedo nas letras!", "Drag your finger across the letters!"], ["Sem microfone: arraste o dedo nas letras!", "No microphone: drag your finger across the letters!"],
+    ["Vamos fazer um teste: <b>fale uma palavra</b> com as letras aqui embaixo. Pode falar, eu tô ouvindo! 🎤", "Let's try it: <b>say a word</b> using the letters below. Go ahead, I'm listening! 🎤"],
+    ["Forme uma palavra com essas letras!", "Make a word with these letters!"],
+    ["Você também pode construir as palavras <b>manualmente, arrastando</b> de uma letra pra outra.", "You can also build words <b>by hand, dragging</b> from one letter to the next."],
+    ["Falou uma palavra? Toque aqui no <b>✓</b> pra confirmar mais rápido.", "Said a word? Tap the <b>✓</b> here to confirm it faster."],
+    ["Cada palavra que você acha <b>preenche esses espaços</b>. Tente completar todos!", "Each word you find <b>fills these spaces</b>. Try to complete them all!"],
+    ["Achou uma palavra que vale mas não está aqui em cima? Ela vai pro <b>banco de bônus</b> e conta pontos igual!", "Found a valid word that isn't up here? It goes to the <b>bonus bank</b> and scores the same!"],
+    ["Fique de olho no <b>grilo</b>! Acertar a palavra em que ele está vale <b>o dobro</b>.", "Watch the <b>cricket</b>! Getting the word it's sitting on is worth <b>double</b>."],
+    ["Você tem <b>1 minuto</b>. Ache a palavra principal ou a maior parte das palavras pra passar de fase.", "You have <b>1 minute</b>. Find the main word or most of the words to pass the level."],
+    ["Pronto? Então bora! Toque em <b>Começar</b>.", "Ready? Let's go! Tap <b>Start</b>."],
+    ["Vou te mostrar como jogar!", "Let me show you how to play!"],
+    ["Complete 1 tabuleiro", "Complete 1 board"], ["Acerte 10 palavras com o grilo", "Get 10 words with the cricket"], ["Jogue 25 partidas", "Play 25 rounds"],
+    ["Só o campeão de ontem", "Only yesterday's champion"], ["Só o campeão da semana passada", "Only last week's champion"], ["Desde o início", "From the start"], ["Você é o campeão!", "You're the champion!"],
+    ["Rosto", "Face"], ["Cabelo", "Hair"], ["Barba e bigode", "Beard & mustache"], ["Acessórios", "Accessories"], ["Roupa e fundo", "Clothes & background"], ["Fantasias", "Costumes"], ["Molduras", "Frames"],
+    ["Pele", "Skin"], ["Cor do cabelo", "Hair color"], ["Olhos", "Eyes"], ["Cor dos olhos", "Eye color"], ["Cílios", "Lashes"], ["Boca", "Mouth"], ["Barba", "Beard"], ["Bigode", "Mustache"],
+    ["Óculos", "Glasses"], ["Brincos", "Earrings"], ["Chapéu", "Hat"], ["Roupa", "Clothes"], ["Cor da roupa", "Clothes color"], ["Fantasia", "Costume"], ["Fundo", "Background"], ["Moldura", "Frame"],
+    ["Careca", "Bald"], ["Curto", "Short"], ["Topete", "Quiff"], ["Moicano", "Mohawk"], ["Dois coques", "Space buns"], ["Liso longo", "Long straight"], ["Ondulado", "Wavy"], ["Tranças", "Braids"], ["Rabo de cavalo", "Ponytail"], ["Coque", "Bun"],
+    ["Grandes", "Big"], ["Brilhantes", "Sparkly"], ["Amendoados", "Almond"], ["Felizes", "Happy"], ["Olhando de lado", "Side glance"], ["Determinados", "Determined"], ["Sonolentos", "Sleepy"], ["Piscando", "Winking"], ["Estrela", "Star"],
+    ["Sem", "None"], ["Com cílios", "With lashes"], ["Sorriso", "Smile"], ["Risada", "Laugh"], ["De lado", "Smirk"], ["Surpreso", "Surprised"], ["Batom", "Lipstick"],
+    ["Nenhuma", "None"], ["Nenhum", "None"], ["Por fazer", "Stubble"], ["Cavanhaque", "Goatee"], ["Cheia", "Full"], ["Clássico", "Classic"], ["Bigodão", "Big mustache"],
+    ["Redondo", "Round"], ["Quadrado", "Square"], ["De sol", "Sunglasses"], ["Coração", "Heart"], ["Argola", "Hoops"], ["Pérola", "Pearl"],
+    ["Boné", "Cap"], ["Gorro", "Beanie"], ["Palha", "Straw hat"], ["Cartola", "Top hat"], ["Fones", "Headphones"],
+    ["Camiseta", "T-shirt"], ["Moletom", "Hoodie"], ["Camisa e gravatinha", "Shirt & bow tie"], ["Jaqueta", "Jacket"], ["Listrada", "Striped"],
+    ["Explorador", "Explorer"], ["Pirata", "Pirate"], ["Dinossauro", "Dinosaur"], ["Bruxa", "Witch"], ["Mago", "Wizard"], ["Super-herói", "Superhero"], ["Astronauta", "Astronaut"], ["Realeza", "Royalty"],
+    ["Simples", "Simple"], ["Madeira", "Wood"], ["Selva", "Jungle"], ["Grilo", "Cricket"], ["Prata", "Silver"], ["Ouro", "Gold"], ["Diamante", "Diamond"],
+    [/(\d+) letras · palavras cruzadas/g, "$1 letters · crossword"], [/Fase (\d+) concluída!/g, "Level $1 complete!"], [/Fase (\d+)/g, "Level $1"],
+    [/Quase! Ache a palavra principal ou (\d+) palavras\./g, "Almost! Find the main word or $1 words."],
+    [/Você achou <b>(\d+)<\/b> de <b>(\d+)<\/b> palavras do tabuleiro\./g, "You found <b>$1</b> of <b>$2</b> board words."],
+    [/Palavras do tabuleiro: /g, "Board words: "], [/Grilos pegos: /g, "Crickets caught: "], [/Palavras bônus: /g, "Bonus words: "],
+    [/E aí, ([^!]*)! Bora pra <b class="wd">fase (\d+)<\/b>\?/g, 'Hey, $1! Ready for <b class="wd">level $2</b>?'],
+    [/Oi(, [^!]+)?! Eu sou o /g, "Hi$1! I'm "], [/Jogue (\d+) partidas/g, "Play $1 rounds"],
+    [/ liberada! Escolha em "Seu avatar"\./g, " unlocked! Pick it in \"Your avatar\"."], [/ liberada!/g, " unlocked!"],
+    [/PALAVRA PRINCIPAL!/g, "MAIN WORD!"], [/TABULEIRO COMPLETO!/g, "BOARD COMPLETE!"], [/GRILO x2!/g, "CRICKET x2!"],
+    [/Não consegui salvar no ranking/g, "Couldn't save to the ranking"], [/Não consegui salvar: /g, "Couldn't save: "], [/Não deu pra entrar: /g, "Couldn't sign in: "],
+    [/Preciso da permissão do microfone pra jogar\. Libere nas configurações do navegador\./g, "I need microphone permission to play. Allow it in your browser settings."],
+    [/Este navegador não tem reconhecimento de voz\. Abra no Google Chrome\./g, "This browser has no speech recognition. Open it in Google Chrome."]
+  ],
+  hu: [
+    ["Jogo de palavras por voz", "Hanggal játszható szójáték"],
+    ["▶ Começar", "▶ Kezdés"], ["Começar", "Kezdés"],
+    ["Carregando palavras…", "Szavak betöltése…"], ["Carregando…", "Betöltés…"],
+    ["⚠️ Não consegui carregar a lista de palavras. Recarregue a página.", "⚠️ Nem sikerült betölteni a szólistát. Töltsd újra az oldalt."],
+    ["⚠️ Problema ao preparar as palavras. Recarregue a página.", "⚠️ Hiba a szavak előkészítésekor. Töltsd újra az oldalt."],
+    ["Ainda carregando as palavras, tente de novo em alguns segundos.", "Még töltődnek a szavak, próbáld újra pár másodperc múlva."],
+    ["Mesmas letras pra todo mundo hoje. Vale sua melhor rodada. O 1º lugar ganha a moldura de ouro amanhã!", "Ma mindenki ugyanazokat a betűket kapja. A legjobb köröd számít. Az 1. helyezett holnap arany keretet kap!"],
+    ["Soma dos pontos da semana. O 1º lugar ganha a moldura de diamante na semana que vem!", "A heti pontok összege. Az 1. helyezett jövő héten gyémánt keretet kap!"],
+    ["Soma dos pontos de todas as rodadas. Quanto mais joga, mais sobe!", "Az összes kör pontjainak összege. Minél többet játszol, annál feljebb kerülsz!"],
+    ["Mesmas letras pra todo mundo", "Mindenkinek ugyanazok a betűk"],
+    ["Desafio do dia", "Napi kihívás"], ["palavras cruzadas", "keresztrejtvény"], ["letras", "betű"],
+    ["Campeão de ontem", "Tegnapi bajnok"], ["Campeão da semana", "A hét bajnoka"], ["Pode ser você!", "Lehetsz te is!"],
+    ["média por rodada", "átlag körönként"], ["média de hoje", "mai átlag"],
+    ["Não consegui carregar o ranking.", "Nem sikerült betölteni a ranglistát."], ["Ninguém jogou ainda. Seja o primeiro!", "Még senki sem játszott. Légy te az első!"],
+    ["Como você quer jogar?", "Hogyan szeretnél játszani?"], ["Entrar com Google", "Belépés Google-lel"], ["Jogar como convidado", "Játék vendégként"],
+    ["Como convidado, seu progresso fica salvo só neste aparelho e você não aparece no ranking.", "Vendégként az előrehaladásod csak ezen az eszközön marad meg, és nem jelensz meg a ranglistán."],
+    ["Montar avatar", "Avatar készítése"], ["Convidado", "Vendég"],
+    ["Seu avatar", "Az avatarod"], ["Seu nome", "A neved"], ["Como vai aparecer no ranking", "Így jelensz meg a ranglistán"],
+    ["Salvar e jogar", "Mentés és játék"], ["Voltar", "Vissza"], ["Sair da conta", "Kijelentkezés"], ["Sair do modo convidado", "Kilépés a vendég módból"],
+    ["Coloque seu nome 🙂", "Írd be a neved 🙂"],
+    ["Acabou o tempo!", "Lejárt az idő!"], ["Quer mais 20 segundos?", "Kérsz még 20 másodpercet?"], ["Assistir vídeo (+20s)", "Videó megnézése (+20 mp)"],
+    ["Encerrar rodada", "Kör befejezése"], ["Versão de teste: o tempo extra é liberado sem anúncio de verdade.", "Tesztverzió: az extra időt valódi hirdetés nélkül kapod meg."],
+    ["Palavras que valem, mas não estão no tabuleiro. Valem os mesmos pontos.", "Érvényes szavak, amelyek nincsenek a táblán. Ugyanannyi pontot érnek."],
+    ["Palavras bônus", "Bónuszszavak"], ["Fechar", "Bezárás"], ["Nenhuma ainda.", "Még nincs."],
+    ["Conquistas novas!", "Új jutalmak!"], ["As palavras da rodada", "A kör szavai"], ["Palavras que faltaram", "Kimaradt szavak"],
+    ["Nenhuma! Você achou todas.", "Egy sem! Mindet megtaláltad."], ["Nenhum bônus desta vez.", "Most nincs bónusz."],
+    ["Alguma palavra deu errado?", "Valamelyik szóval gond volt?"], ["Escreva a palavra e diga se ela deveria valer ou não. A gente revisa!", "Írd be a szót, és jelezd, hogy érvényes-e. Átnézzük!"],
+    ["Deveria valer", "Érvényes kellene legyen"], ["Não deveria valer", "Nem kellene érvényes legyen"], ["Obrigado! Recebemos.", "Köszönjük! Megkaptuk."], ["Não consegui enviar agora.", "Most nem sikerült elküldeni."],
+    ["Salvando no ranking…", "Mentés a ranglistára…"], ["Salvo no ranking!", "Mentve a ranglistára!"],
+    ["Progresso salvo neste aparelho. Entre com Google pra aparecer no ranking!", "Az előrehaladásod ezen az eszközön mentve. Lépj be Google-lel, hogy a ranglistán is megjelenj!"],
+    ["Você completou o tabuleiro!", "Kitöltötted a táblát!"], ["Tabuleiro completo", "Kész tábla"],
+    ["Jogar de novo", "Újra"], ["Tentar de novo", "Próbáld újra"], ["Próxima fase", "Következő pálya"], ["Menu principal", "Főmenü"],
+    ["Pular", "Kihagyás"], ["Próximo", "Tovább"], ["Ouvindo", "Figyelek"], ["pontos", "pont"], ["Início", "Kezdőlap"], ["Avatar", "Avatar"],
+    ["Hoje", "Ma"], ["Semana", "Hét"], ["Geral", "Összesített"], ["Entrar", "Belépés"],
+    ["Boa!", "Szép!"], ["Isso aí!", "Ez az!"], ["Mandou bem!", "Ügyes!"], ["Que palavrão!", "Micsoda szó!"], ["Uau!", "Hű!"], ["Essa é das boas!", "Ez egy jó szó!"],
+    ["Essa também vale!", "Ez is érvényes!"], ["Essa você já falou!", "Ezt már mondtad!"],
+    ["Tô esperando…", "Várok…"], ["Dica: começa pelas de 3 letras!", "Tipp: kezdd a 3 betűs szavakkal!"], ["Corre! Tá acabando!", "Siess! Mindjárt lejár az idő!"],
+    ["Hoje tem desafio novo!", "Ma új kihívás van!"], ["Será que você bate o recorde?", "Meg tudod dönteni a rekordot?"], ["Bora jogar?", "Játszunk?"],
+    ["Você achou a maior palavra, parabéns!", "Megtaláltad a leghosszabb szót, gratulálok!"], ["Pegou o grilo! Pontos em dobro!", "Elkaptad a tücsköt! Dupla pont!"],
+    ["Pode falar!", "Mondhatod!"], ["Arraste o dedo nas letras!", "Húzd az ujjad a betűkön!"], ["Sem microfone: arraste o dedo nas letras!", "Nincs mikrofon: húzd az ujjad a betűkön!"],
+    ["Vamos fazer um teste: <b>fale uma palavra</b> com as letras aqui embaixo. Pode falar, eu tô ouvindo! 🎤", "Próbáljuk ki: <b>mondj egy szót</b> a lenti betűkből. Mondhatod, figyelek! 🎤"],
+    ["Forme uma palavra com essas letras!", "Rakj ki egy szót ezekből a betűkből!"],
+    ["Você também pode construir as palavras <b>manualmente, arrastando</b> de uma letra pra outra.", "A szavakat <b>kézzel is kirakhatod</b>: húzd az ujjad egyik betűről a másikra."],
+    ["Falou uma palavra? Toque aqui no <b>✓</b> pra confirmar mais rápido.", "Mondtál egy szót? Koppints ide a <b>✓</b>-re, hogy gyorsabban elfogadjam."],
+    ["Cada palavra que você acha <b>preenche esses espaços</b>. Tente completar todos!", "Minden megtalált szó <b>kitölti ezeket a helyeket</b>. Próbáld mindet kitölteni!"],
+    ["Achou uma palavra que vale mas não está aqui em cima? Ela vai pro <b>banco de bônus</b> e conta pontos igual!", "Találtál egy érvényes szót, ami nincs fent? A <b>bónuszbankba</b> kerül, és ugyanannyi pontot ér!"],
+    ["Fique de olho no <b>grilo</b>! Acertar a palavra em que ele está vale <b>o dobro</b>.", "Figyeld a <b>tücsköt</b>! Ha kitalálod a szót, amin ül, <b>dupla pontot</b> kapsz."],
+    ["Você tem <b>1 minuto</b>. Ache a palavra principal ou a maior parte das palavras pra passar de fase.", "<b>1 perced</b> van. Találd meg a fő szót vagy a szavak nagy részét, hogy továbbjuss."],
+    ["Pronto? Então bora! Toque em <b>Começar</b>.", "Kész vagy? Akkor rajta! Koppints a <b>Kezdés</b> gombra."],
+    ["Vou te mostrar como jogar!", "Megmutatom, hogyan kell játszani!"],
+    ["Complete 1 tabuleiro", "Tölts ki 1 táblát"], ["Acerte 10 palavras com o grilo", "Találj ki 10 szót a tücsökkel"], ["Jogue 25 partidas", "Játssz 25 kört"],
+    ["Só o campeão de ontem", "Csak a tegnapi bajnoké"], ["Só o campeão da semana passada", "Csak a múlt heti bajnoké"], ["Desde o início", "Kezdettől elérhető"], ["Você é o campeão!", "Te vagy a bajnok!"],
+    ["Rosto", "Arc"], ["Cabelo", "Haj"], ["Barba e bigode", "Szakáll és bajusz"], ["Acessórios", "Kiegészítők"], ["Roupa e fundo", "Ruha és háttér"], ["Fantasias", "Jelmezek"], ["Molduras", "Keretek"],
+    ["Pele", "Bőr"], ["Cor do cabelo", "Hajszín"], ["Olhos", "Szem"], ["Cor dos olhos", "Szemszín"], ["Cílios", "Szempilla"], ["Boca", "Száj"], ["Barba", "Szakáll"], ["Bigode", "Bajusz"],
+    ["Óculos", "Szemüveg"], ["Brincos", "Fülbevaló"], ["Chapéu", "Kalap"], ["Roupa", "Ruha"], ["Cor da roupa", "Ruha színe"], ["Fantasia", "Jelmez"], ["Fundo", "Háttér"], ["Moldura", "Keret"],
+    ["Careca", "Kopasz"], ["Curto", "Rövid"], ["Topete", "Bóbita"], ["Moicano", "Taraj"], ["Dois coques", "Két konty"], ["Liso longo", "Hosszú egyenes"], ["Ondulado", "Hullámos"], ["Tranças", "Copfok"], ["Rabo de cavalo", "Lófarok"], ["Coque", "Konty"],
+    ["Grandes", "Nagy"], ["Brilhantes", "Csillogó"], ["Amendoados", "Mandula"], ["Felizes", "Vidám"], ["Olhando de lado", "Oldalra néz"], ["Determinados", "Elszánt"], ["Sonolentos", "Álmos"], ["Piscando", "Kacsintó"], ["Estrela", "Csillag"],
+    ["Sem", "Nincs"], ["Com cílios", "Szempillával"], ["Sorriso", "Mosoly"], ["Risada", "Nevetés"], ["De lado", "Félmosoly"], ["Surpreso", "Meglepett"], ["Batom", "Rúzs"],
+    ["Nenhuma", "Nincs"], ["Nenhum", "Nincs"], ["Por fazer", "Borosta"], ["Cavanhaque", "Kecskeszakáll"], ["Cheia", "Teli"], ["Clássico", "Klasszikus"], ["Bigodão", "Nagy bajusz"],
+    ["Redondo", "Kerek"], ["Quadrado", "Szögletes"], ["De sol", "Napszemüveg"], ["Coração", "Szív"], ["Argola", "Karika"], ["Pérola", "Gyöngy"],
+    ["Boné", "Baseballsapka"], ["Gorro", "Sapka"], ["Palha", "Szalmakalap"], ["Cartola", "Cilinder"], ["Fones", "Fejhallgató"],
+    ["Camiseta", "Póló"], ["Moletom", "Kapucnis pulóver"], ["Camisa e gravatinha", "Ing és csokornyakkendő"], ["Jaqueta", "Dzseki"], ["Listrada", "Csíkos"],
+    ["Explorador", "Felfedező"], ["Pirata", "Kalóz"], ["Dinossauro", "Dinoszaurusz"], ["Bruxa", "Boszorkány"], ["Mago", "Varázsló"], ["Super-herói", "Szuperhős"], ["Astronauta", "Űrhajós"], ["Realeza", "Királyi"],
+    ["Simples", "Egyszerű"], ["Madeira", "Fa"], ["Selva", "Dzsungel"], ["Grilo", "Tücsök"], ["Prata", "Ezüst"], ["Ouro", "Arany"], ["Diamante", "Gyémánt"],
+    [/(\d+) letras · palavras cruzadas/g, "$1 betű · keresztrejtvény"], [/Fase (\d+) concluída!/g, "$1. pálya teljesítve!"], [/Fase (\d+)/g, "$1. pálya"],
+    [/Quase! Ache a palavra principal ou (\d+) palavras\./g, "Majdnem! Találd meg a fő szót vagy $1 szót."],
+    [/Você achou <b>(\d+)<\/b> de <b>(\d+)<\/b> palavras do tabuleiro\./g, "<b>$1</b> szót találtál meg a tábla <b>$2</b> szavából."],
+    [/Palavras do tabuleiro: /g, "Táblaszavak: "], [/Grilos pegos: /g, "Elkapott tücskök: "], [/Palavras bônus: /g, "Bónuszszavak: "],
+    [/E aí, ([^!]*)! Bora pra <b class="wd">fase (\d+)<\/b>\?/g, 'Szia, $1! Kezdjük: <b class="wd">$2. pálya</b>!'],
+    [/Oi(, [^!]+)?! Eu sou o /g, "Szia$1! Én vagyok "], [/Jogue (\d+) partidas/g, "Játssz $1 kört"],
+    [/ liberada! Escolha em "Seu avatar"\./g, " feloldva! Válaszd ki az \"Az avatarod\" menüben."], [/ liberada!/g, " feloldva!"],
+    [/PALAVRA PRINCIPAL!/g, "FŐ SZÓ!"], [/TABULEIRO COMPLETO!/g, "KÉSZ A TÁBLA!"], [/GRILO x2!/g, "TÜCSÖK x2!"],
+    [/Não consegui salvar no ranking/g, "Nem sikerült menteni a ranglistára"], [/Não consegui salvar: /g, "Nem sikerült menteni: "], [/Não deu pra entrar: /g, "Nem sikerült belépni: "],
+    [/Preciso da permissão do microfone pra jogar\. Libere nas configurações do navegador\./g, "A játékhoz mikrofonengedély kell. Engedélyezd a böngésző beállításaiban."],
+    [/Este navegador não tem reconhecimento de voz\. Abra no Google Chrome\./g, "Ez a böngésző nem ismeri fel a beszédet. Nyisd meg Google Chrome-ban."]
+  ]
+};
+// traduz um texto/HTML: frases longas em qualquer lugar; palavras curtas só quando são o texto inteiro de um elemento
+const escRe = x => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+let TR_CACHE = null;
+function tr(s){
+  if (LANG_ID === "pt" || typeof s !== "string" || !s) return s;
+  if (!TR_CACHE){
+    const tab = TXT[LANG_ID];
+    TR_CACHE = { re: tab.filter(x => x[0] instanceof RegExp), str: tab.filter(x => !(x[0] instanceof RegExp)).map(([a, b]) => [a, b, new RegExp(">(\\s*)" + escRe(a) + "(\\s*)(<|$)", "g")]) };
+  }
+  for (const [a, b] of TR_CACHE.re) s = s.replace(a, b);
+  for (const [a, b, rx] of TR_CACHE.str){
+    if (s.trim() === a){ s = s.replace(a, b); continue; }
+    if (a.length >= 14 || a.includes("<")) s = s.split(a).join(b);
+    else s = s.replace(rx, (m, p1, p2, p3) => ">" + p1 + b + p2 + p3);
+  }
+  return s;
+}
+// aplica a tradução em tudo que o jogo escreve na tela
+if (LANG_ID !== "pt"){
+  const ih = Object.getOwnPropertyDescriptor(Element.prototype, "innerHTML");
+  Object.defineProperty(Element.prototype, "innerHTML", { set(v){ ih.set.call(this, tr(v)); }, get(){ return ih.get.call(this); }, configurable: true });
+  const tc = Object.getOwnPropertyDescriptor(Node.prototype, "textContent");
+  Object.defineProperty(Node.prototype, "textContent", { set(v){ tc.set.call(this, tr(v)); }, get(){ return tc.get.call(this); }, configurable: true });
+  const al = window.alert.bind(window); window.alert = m => al(tr(m));
+  const walk = root => {
+    const it = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+    while ((n = it.nextNode())){ const v = n.nodeValue, t2 = tr(v); if (t2 !== v) n.nodeValue = t2; }
+    root.querySelectorAll("[placeholder]").forEach(e => e.placeholder = tr(e.placeholder));
+  };
+  walk(document.body);
+  document.querySelectorAll("#repWord").forEach(e => e.placeholder = LANG_ID === "en" ? "E.g.: flight" : "Pl.: repülés");
+}
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -512,7 +738,7 @@ const FRASES = {
   bonus: ["Essa também vale!"],
   repetida: ["Essa você já falou!"],
   parado: ["Tô esperando…", "Dica: começa pelas de 3 letras!"],
-  menu: n => [`E aí, ${n}! Bora pra <b class="wd">fase ${PROFILE?.level || 1}</b>?`, "Hoje tem desafio novo!", "Será que você bate o recorde?"]
+  menu: n => [`E aí, ${n}! Bora pra <b class="wd">fase ${PROFILE?.[F("level")] || 1}</b>?`, "Hoje tem desafio novo!", "Será que você bate o recorde?"]
 };
 const PTS = n => ({3:10,4:20,5:40,6:70,7:110}[n] || 0);
 const COMPLETE_BONUS = 200, PER_SECOND_LEFT = 5;
@@ -529,8 +755,8 @@ const FREQ_URLS = [
 
 const S = window.SPRITES;
 const $ = id => document.getElementById(id);
-const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-const dayKey = (offset = 0) => new Intl.DateTimeFormat("en-CA", {timeZone: "America/Sao_Paulo"}).format(new Date(Date.now() + offset * 864e5));
+const norm = s => LANG.strip ? s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : s.toLowerCase().normalize("NFC");
+const dayKey = (offset = 0) => new Intl.DateTimeFormat("en-CA", {timeZone: LANG.tz}).format(new Date(Date.now() + offset * 864e5));
 /* semana começa na segunda-feira, horário de Brasília. Ex.: "2026-W47" */
 function weekKey(offset = 0){
   const d = new Date(dayKey() + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + offset * 7);
@@ -594,9 +820,10 @@ $("bonusBtn").insertAdjacentHTML("afterbegin", I.book);
 $("playDaily").innerHTML = `<span class="dIc">${I.trophy}</span><span><b>Desafio do dia</b><small>Mesmas letras pra todo mundo</small></span><span class="left" id="dailyLeft"></span>`;
 // quanto falta pro desafio do dia acabar (meia-noite de Brasília)
 function updDailyLeft(){
-  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false}).formatToParts(new Date()).map(x => [x.type, x.value]));
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {timeZone: LANG.tz, hour: "2-digit", minute: "2-digit", hour12: false}).formatToParts(new Date()).map(x => [x.type, x.value]));
   const left = 24 * 60 - (+p.hour % 24) * 60 - +p.minute, el = document.getElementById("dailyLeft");
-  if (el) el.textContent = `⏳ ${Math.floor(left / 60)}h ${left % 60}min`;
+  const [hU, mU] = LANG_ID === "hu" ? ["ó", "p"] : LANG_ID === "en" ? ["h", "m"] : ["h", "min"];
+  if (el) el.textContent = `⏳ ${Math.floor(left / 60)} ${hU} ${left % 60} ${mU}`;
 }
 updDailyLeft(); setInterval(updDailyLeft, 30000);
 $("navbar").querySelector('[data-nav="home"]').innerHTML = `${I.home}Início`;
@@ -730,6 +957,15 @@ document.addEventListener("visibilitychange", () => document.hidden ? onHidden()
 addEventListener("pagehide", onHidden);
 addEventListener("blur", () => { if (document.hidden) onHidden(); });
 
+/* ================= IDIOMA ================= */
+function setLang(id){ if (id === LANG_ID) return; store.set("fp_lang", id); location.reload(); }
+const langButtons = () => Object.entries(LANGS).map(([id, L]) => `<button data-l="${id}" class="${id === LANG_ID ? "on" : ""}">${L.flag} ${L.name}</button>`).join("");
+$("langRow").innerHTML = langButtons(); $("langPick").innerHTML = langButtons();
+$("langRow").onclick = $("langPick").onclick = e => { const b = e.target.closest("button[data-l]"); if (b) setLang(b.dataset.l); };
+$("langBtn").textContent = LANG.flag;
+$("langBtn").onclick = () => $("langBox").classList.remove("hidden");
+$("langClose").onclick = () => $("langBox").classList.add("hidden");
+
 /* ================= ABERTURA ================= */
 (function intro(){
   const ape = $("splashApe"); ape.src = S.readingFull.src;
@@ -839,35 +1075,44 @@ function addConjugations(LEMMA){
 }
 /* listas que você pode editar no GitHub: palavras-extra.txt (passam a valer) e palavras-bloqueadas.txt (deixam de valer) */
 const EXTRA_WORDS = "voo voos enjoo enjoos creem deem leem veem zoo";
+// nomes próprios comuns que aparecem nas listas de frequência (não valem como palavra)
+const NAME_BLOCK = {
+  en: "john james david michael robert mary paul peter george frank harry jack sam tom mike nick joe ben max alex ryan kevin steve jim bob bill tony jason adam eric mark chris anna sarah emma kate lucy jane amy laura lisa linda susan karen maria rose grace alice sophie jesus christ god london paris york texas france china james ok yeah okay gonna wanna gotta hey huh uh oh",
+  hu: "péter anna jános józsef lászló istván zoltán gábor ferenc andrás attila tamás zsolt mária éva kati kata eszter judit ildikó krisztina andrea zsuzsa ágnes bence dávid márk ádám máté jézus isten budapest london párizs amerika oké szia hé"
+};
 const BLOCKED_WORDS = "barb";
 async function applyWordLists(LEMMA){
   const get = async f => { try{ const r = await fetch(f, {cache: "no-cache"}); return r.ok ? await r.text() : ""; }catch(e){ return ""; } };
-  const [ex, bl] = await Promise.all([get("palavras-extra.txt"), get("palavras-bloqueadas.txt")]);
-  const words = s => s.split(/\s+/).map(w => w.trim().toLowerCase()).filter(w => /^[a-záàâãéêíóôõúüç]+$/.test(w));
-  for (const w of words(EXTRA_WORDS + " " + ex)){ const k = norm(w); if (k.length >= 3 && k.length <= NLET){ DICT.set(k, w); LEMMA.add(k); } }
-  for (const w of words(BLOCKED_WORDS + " " + bl)){ const k = norm(w); DICT.delete(k); LEMMA.delete(k); }
+  const sfx = LANG_ID === "pt" ? "" : "-" + LANG_ID;
+  const [ex, bl] = await Promise.all([get("palavras-extra" + sfx + ".txt"), get("palavras-bloqueadas" + sfx + ".txt")]);
+  const words = s => s.split(/\s+/).map(w => w.trim().toLowerCase()).filter(w => LANG.re.test(w));
+  for (const w of words((LANG_ID === "pt" ? EXTRA_WORDS : "") + " " + ex)){ const k = norm(w); if (k.length >= 3 && k.length <= NLET){ DICT.set(k, w); LEMMA.add(k); } }
+  for (const w of words((LANG_ID === "pt" ? BLOCKED_WORDS : (NAME_BLOCK[LANG_ID] || "")) + " " + bl)){ const k = norm(w); DICT.delete(k); LEMMA.delete(k); }
 }
+const VERBS = new Set();
 async function loadWords(){
   $("loadNote").textContent = "Carregando palavras…";
-  const [dictTxt, freqTxt] = await Promise.all([fetchFirst(DICT_URLS), fetchFirst(FREQ_URLS)]);
+  let dictTxt, freqTxt;
+  if (LANG_ID === "pt") [dictTxt, freqTxt] = await Promise.all([fetchFirst(DICT_URLS), fetchFirst(LANG.freq)]);
+  else { freqTxt = await fetchFirst(LANG.freq); dictTxt = freqTxt && freqTxt.split("\n").map(l => l.split(" ")[0]).join("\n"); }
   if (!dictTxt){ $("loadNote").textContent = $("dictStatus").textContent = "⚠️ Não consegui carregar a lista de palavras. Recarregue a página."; return; }
   const NAMES = new Set(), LEMMA = new Set();
   for (const raw of dictTxt.split("\n")){
     const w = raw.trim();
     if (/^[A-ZÁÉÍÓÚÂÊÔÃÕÇ][a-záàâãéêíóôõúüç]+$/.test(w)){ NAMES.add(norm(w)); continue; }   // nomes próprios
-    if (!/^[a-záàâãéêíóôõúüç]+$/.test(w)) continue;
+    if (!LANG.re.test(w)) continue;
     const k = norm(w);
+    if (LANG_ID === "pt" && /(ar|er|ir)$/.test(k) && k.length <= 10) VERBS.add(k);
     if (k.length < 3 || k.length > NLET) continue;
     LEMMA.add(k);
     if (!DICT.has(k)) DICT.set(k, w);
   }
-  addConjugations(LEMMA);
   if (freqTxt){
     let i = 0;
     for (const line of freqTxt.split("\n")){
       const w = line.split(" ")[0]?.trim().toLowerCase(); if (!w) continue;
       i++;
-      if (!/^[a-záàâãéêíóôõúüç]+$/.test(w)) continue;
+      if (!LANG.re.test(w)) continue;
       const k = norm(w);
       if (k.length < 3 || k.length > NLET) continue;
       // a lista de frequência só serve pra saber quais palavras são comuns (não adiciona palavras novas)
@@ -877,6 +1122,13 @@ async function loadWords(){
     }
   }
   const hasFreq = RANK.size > 2000;
+  // conjuga só verbos de uso comum (evita formas estranhas tipo "dico"); as formas valem como bônus
+  if (freqTxt && LANG_ID === "pt"){
+    let i = 0; const VR = new Map();
+    for (const line of freqTxt.split("\n")){ const w = norm(line.split(" ")[0]?.trim().toLowerCase() || ""); i++; if (VERBS.has(w) && !VR.has(w)) VR.set(w, i); }
+    for (const v of [...VERBS]) if (!VR.has(v) || VR.get(v) > 25000) VERBS.delete(v);
+  }
+  if (LANG_ID === "pt") addConjugations(VERBS);
   if (!hasFreq) for (const k of DICT.keys()) RANK.set(k, 1);
   await applyWordLists(LEMMA);
   for (const L of [5,6,7]) BASES_BY[L] = [...DICT.keys()].filter(k => k.length === L && LEMMA.has(k) && RANK.get(k) <= (L === 7 ? BASE_RANK : 8000)).sort();
@@ -967,11 +1219,18 @@ function buildCross(words, r, CROSS_MAX = 10){
   for (const g of grid.values()){ g.x -= minX; g.y -= minY; }
   return { placed, cols: maxX - minX + 1, rows: maxY - minY + 1 };
 }
-const HAND_LEVELS = {
-  1: { base: "gatos", words: ["gatos","gotas","gato","gota","atos","soa"] },
-  2: { base: "ratos", words: ["ratos","rotas","rato","rota","tosa","ato","aro","ora"] },
-  3: { base: "prato", words: ["prato","porta","parto","pato","rato","pao","opa","ato","aro"] }
+const HAND_ALL = {
+  pt: { 1: { base: "gatos", words: ["gatos","gotas","gato","gota","atos","soa"] },
+        2: { base: "ratos", words: ["ratos","rotas","rato","rota","tosa","ato","aro","ora"] },
+        3: { base: "prato", words: ["prato","porta","parto","pato","rato","pao","opa","ato","aro"] } },
+  en: { 1: { base: "heart", words: ["heart","earth","hate","heat","tear","rate","hat","ear","art"] },
+        2: { base: "plate", words: ["plate","petal","late","tale","leap","pale","tape","pet","tea"] },
+        3: { base: "smile", words: ["smile","slime","miles","mile","lime","slim","lie","elm"] } },
+  hu: { 1: { base: "sarok", words: ["sarok","sor","sok","rak","kar","kos"] },
+        2: { base: "kenyér", words: ["kenyér","kér","nyer","kény"] },
+        3: { base: "tégla", words: ["tégla","tél","lég","tag"] } }
 };
+const HAND_LEVELS = HAND_ALL[LANG_ID];
 function makeHandRound(lvl){
   const h = HAND_LEVELS[lvl], r = seeded("mao-" + lvl);
   const cw = buildCross(h.words, r, 12);
@@ -1306,8 +1565,8 @@ $("loginGuest").onclick = () => {
   if (PENDING){ const m = PENDING; PENDING = null; startGame(m); }
 };
 function renderUser(){
-  updLevelBtn(PROFILE?.level || 1);
-  const stars = Object.values(PROFILE?.stars || {}).reduce((a, b) => a + b, 0);
+  updLevelBtn(PROFILE?.[F("level")] || 1);
+  const stars = Object.values(PROFILE?.[F("stars")] || {}).reduce((a, b) => a + b, 0);
   $("starTotal").innerHTML = `${I.star} ${stars}`;
   $("crkTotal").innerHTML = `<span style="width:24px;height:20px;display:flex">${CRICKET}</span> ${PROFILE?.bflyWords || 0}`;
   const c = $("userChip");
@@ -1348,10 +1607,10 @@ async function loadRanking(){
   const list = $("rankList");
   list.innerHTML = `<li class="muted">Carregando…</li>`;
   try{
-    const daily = TAB === "daily", field = {daily:"best", week:"points", all:"totalPoints"}[TAB];
-    const q = TAB === "daily" ? query(collection(db, "daily", dayKey(), "scores"), orderBy("best", "desc"), limit(20))
-            : TAB === "week"  ? query(collection(db, "weekly", weekKey(), "scores"), orderBy("points", "desc"), limit(20))
-            :                   query(collection(db, "users"), orderBy("totalPoints", "desc"), limit(20));
+    const daily = TAB === "daily", field = {daily:"best", week:"points", all:F("totalPoints")}[TAB];
+    const q = TAB === "daily" ? query(collection(db, "daily", LK(dayKey()), "scores"), orderBy("best", "desc"), limit(20))
+            : TAB === "week"  ? query(collection(db, "weekly", LK(weekKey()), "scores"), orderBy("points", "desc"), limit(20))
+            :                   query(collection(db, "users"), orderBy(F("totalPoints"), "desc"), limit(20));
     const snap = await getDocs(q);
     if (snap.empty) list.innerHTML = `<li class="muted">Ninguém jogou ainda. Seja o primeiro!</li>`;
     else {
@@ -1369,8 +1628,8 @@ async function loadChamps(){
   const one = async (q) => { const s = await getDocs(q); let r = null; s.forEach(d => { if (!r) r = { uid: d.id, ...d.data() }; }); return r; };
   try{
     const [day, week] = await Promise.all([
-      one(query(collection(db, "daily", dayKey(-1), "scores"), orderBy("best", "desc"), limit(1))),
-      one(query(collection(db, "weekly", weekKey(-1), "scores"), orderBy("points", "desc"), limit(1)))
+      one(query(collection(db, "daily", LK(dayKey(-1)), "scores"), orderBy("best", "desc"), limit(1))),
+      one(query(collection(db, "weekly", LK(weekKey(-1)), "scores"), orderBy("points", "desc"), limit(1)))
     ]);
     CHAMPS = { day, week };
   }catch(e){}
@@ -1384,7 +1643,7 @@ async function loadChamps(){
 }
 async function loadAvg(){
   try{
-    const [g, d] = await Promise.all([getDoc(doc(db, "stats", "global")), getDoc(doc(db, "daily", dayKey()))]);
+    const [g, d] = await Promise.all([getDoc(doc(db, "stats", LK("global"))), getDoc(doc(db, "daily", LK(dayKey())))]);
     const avg = s => s.exists() && s.data().rounds ? Math.round(s.data().totalPoints / s.data().rounds) : "—";
     $("avgAll").textContent = avg(g); $("avgDay").textContent = avg(d);
   }catch(e){}
@@ -1666,9 +1925,9 @@ $("again").onclick = () => play(G?.mode || "fase");
 $("toHome").onclick = () => fadeTo(() => { show("home"); loadRanking(); });
 
 function startGame(mode){
-  const level = PROFILE?.level || 1;
+  const level = PROFILE?.[F("level")] || 1;
   COMMON_LIMIT = mode === "daily" ? 12000 : commonFor(level);
-  const R = mode === "daily" ? makeListRound(seeded("daily-" + dayKey())) : (HAND_LEVELS[level] ? makeHandRound(level) : makeCrossRound(seeded("fase-" + level), levelLetters(level)));
+  const R = mode === "daily" ? makeListRound(seeded("daily-" + (LANG_ID === "pt" ? "" : LANG_ID) + dayKey())) : (HAND_LEVELS[level] ? makeHandRound(level) : makeCrossRound(seeded("fase-" + level), levelLetters(level)));
   G = { mode, level, ...R, order: R.letters, targetSet: new Set(R.targets),
         found: new Set(), bonusFound: [], score: 0, time: ROUND, extended: false, playing: true, timer: null,
         lastVoice: Date.now(), complete: false, finished: false, bfly: null, bflyIdx: 0, bflyAt: 0, cells: {},
@@ -1728,7 +1987,7 @@ function tutHandDrag(){
   go(); TUT.handT = setInterval(go, 650);
 }
 const TUT_STEPS = [
-  { el: null, text: () => `Oi${PROFILE?.name ? ", " + esc(PROFILE.name) : ""}! Eu sou o <b>Professor Zantar</b>. Vou te mostrar como jogar!` },
+  { el: null, text: () => `Oi${PROFILE?.name ? ", " + esc(PROFILE.name) : ""}! Eu sou o <b>Professor Papius</b>. Vou te mostrar como jogar!` },
   { el: () => $("wheel"), wait: true, text: () => SR ? `Vamos fazer um teste: <b>fale uma palavra</b> com as letras aqui embaixo. Pode falar, eu tô ouvindo! 🎤` : `Forme uma palavra com essas letras!` },
   { el: () => $("wheel"), hand: true, text: () => `Você também pode construir as palavras <b>manualmente, arrastando</b> de uma letra pra outra.` },
   { el: () => $("okBtn"), skipIf: () => !SR, text: () => `Falou uma palavra? Toque aqui no <b>✓</b> pra confirmar mais rápido.` },
@@ -1813,7 +2072,7 @@ function lev(a, b){
   return d[m][n];
 }
 const NUMW = {"0":"zero","1":"um","2":"dois","3":"tres","4":"quatro","5":"cinco","6":"seis","7":"sete","8":"oito","9":"nove","10":"dez","11":"onze","12":"doze","13":"treze","14":"quatorze","15":"quinze","16":"dezesseis","17":"dezessete","18":"dezoito","19":"dezenove","20":"vinte","30":"trinta","40":"quarenta","50":"cinquenta","60":"sessenta","70":"setenta","80":"oitenta","90":"noventa","100":"cem","200":"duzentos","300":"trezentos","400":"quatrocentos","500":"quinhentos","600":"seiscentos","700":"setecentos","800":"oitocentos","900":"novecentos","1000":"mil"};
-const clean = tok => { const d = tok.replace(/[^0-9]/g, ""); if (d && d === tok.replace(/[.,!?]/g, "") && NUMW[d]) return NUMW[d]; return norm(tok.replace(/[^\p{L}]/gu, "")); };
+const clean = tok => { const d = tok.replace(/[^0-9]/g, ""); if (LANG_ID === "pt" && d && d === tok.replace(/[.,!?]/g, "") && NUMW[d]) return NUMW[d]; return norm(tok.replace(/[^\p{L}]/gu, "")); };
 function tryToken(k, allowFuzzy){
   if (k.length < 3) return null;
   if (G.targetSet.has(k)){
@@ -1848,17 +2107,18 @@ function handleResult(res){
   if (!res.isFinal){
     const toks = res[0].transcript.trim().split(/\s+/).map(clean).filter(Boolean);
     // palavras já "fechadas" (tem outra depois) valem na hora
-    for (let i = 0; i < toks.length - 1; i++) tryToken(toks[i], false) || tryToken(toks[i] + toks[i+1], false);
+    const tgt = k => G.targetSet.has(k) ? tryToken(k, false) : null;
+    for (let i = 0; i < toks.length - 1; i++) tgt(toks[i]) || tgt(toks[i] + toks[i+1]);
     // a última pode ainda estar sendo falada ("vir…" de "virei"): espera um instante pra ver se cresce
     const last = toks[toks.length - 1];
     if (last && last !== pendingTok){
       clearTimeout(pendingTimer); pendingTok = last;
-      const valid = G.targetSet.has(last) || G.bonus.has(last);
+      const valid = G.targetSet.has(last);
       // se a palavra não pode ser começo de outra (ex.: "vir" → "virei"), aceita na hora
       if (valid && (!G.prefix.has(last) || Date.now() - okWanted < 600)){ okWanted = 0; tryToken(last, false); }
       else {
         if (valid) $("okBtn").classList.add("hasWord");
-        pendingTimer = setTimeout(() => { $("okBtn").classList.remove("hasWord"); if (G?.playing && pendingTok === last) tryToken(last, false); }, 450);
+        pendingTimer = setTimeout(() => { $("okBtn").classList.remove("hasWord"); if (G?.playing && pendingTok === last && G.targetSet.has(last)) tryToken(last, false); }, 450);
       }
     }
     return;
@@ -1877,6 +2137,7 @@ function handleResult(res){
 }
 /* ---- homófonos: "cela" e "sela", "concerto" e "conserto"... ---- */
 function phon(k){
+  if (LANG_ID !== "pt") return k;
   return k.replace(/ch/g, "x").replace(/lh/g, "L").replace(/nh/g, "N").replace(/h/g, "")
           .replace(/ss/g, "§").replace(/s?c([ei])/g, "§$1").replace(/xc([ei])/g, "§$1")
           .replace(/qu([ei])/g, "k$1").replace(/c/g, "k").replace(/g([ei])/g, "j$1")
@@ -1888,6 +2149,7 @@ const LETTER = {a:"a",b:"b",be:"b",c:"c",ce:"c",d:"d",de:"d",e:"e",f:"f",efe:"f"
   w:"w",x:"x",xis:"x",y:"y",z:"z",ze:"z",cedilha:"ç"};
 // "cela com s", "mexia com x", "conserto com s"…
 function trySpelled(toks){
+  if (LANG_ID !== "pt") return false;
   for (let i = 0; i + 2 < toks.length; i++){
     if (toks[i+1] !== "com") continue;
     let letter = LETTER[toks[i+2]];
@@ -1904,7 +2166,7 @@ function trySpelled(toks){
 function startRec(){
   try{ rec && rec.abort(); }catch(e){}
   rec = new SR();
-  rec.lang = "pt-BR"; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;
+  rec.lang = LANG.speech; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;
   rec.onresult = e => {
     if (!G?.playing) return;
     G.lastVoice = Date.now();
@@ -2004,7 +2266,7 @@ async function finish(){
     $("levelMsg").textContent = G.passed ? `Fase ${G.level} concluída!` : `Quase! Ache a palavra principal ou ${Math.ceil(G.targets.length * PASS_RATE)} palavras.`;
     $("again").innerHTML = G.passed ? `${I.play} Próxima fase` : `${I.replay} Tentar de novo`;
     if (G.passed) [1,2,3].forEach(i => i <= G.stars && setTimeout(() => SFX.star(i), 650 + (i-1) * 600));
-    if (G.passed && G.level >= (PROFILE.level || 1)) { PROFILE.level = G.level + 1; updLevelBtn(PROFILE.level); }
+    if (G.passed && G.level >= (PROFILE[F("level")] || 1)) { PROFILE[F("level")] = G.level + 1; updLevelBtn(PROFILE[F("level")]); }
   } else { $("starsRow").innerHTML = ""; $("levelMsg").textContent = ""; $("again").innerHTML = `${I.replay} Jogar de novo`; }
   $("endScore").textContent = G.score;
   $("endInfo").innerHTML = G.complete ? `Você completou o tabuleiro!` : `Você achou <b>${G.found.size}</b> de <b>${G.targets.length}</b> palavras do tabuleiro.`;
@@ -2036,7 +2298,7 @@ async function saveResult(){
     const before = unlocked(PROFILE);
     PROFILE.rounds = (PROFILE.rounds || 0) + 1; PROFILE.totalPoints = (PROFILE.totalPoints || 0) + G.score;
     PROFILE.boardsCompleted = (PROFILE.boardsCompleted || 0) + (G.complete ? 1 : 0); PROFILE.bflyWords = (PROFILE.bflyWords || 0) + (G.bflyHits || 0);
-    if (G.mode === "fase"){ const st = {...(PROFILE.stars || {})}; if (G.stars > (st[G.level] || 0)) st[G.level] = G.stars; PROFILE.stars = st; if (G.passed) PROFILE.level = Math.max(PROFILE.level || 1, G.level + 1); }
+    if (G.mode === "fase"){ const st = {...(PROFILE[F("stars")] || {})}; if (G.stars > (st[G.level] || 0)) st[G.level] = G.stars; PROFILE[F("stars")] = st; if (G.passed) PROFILE[F("level")] = Math.max(PROFILE[F("level")] || 1, G.level + 1); }
     saveGuest(); renderUser();
     const fresh = [...unlocked(PROFILE)].filter(k => !before.has(k));
     if (fresh.length){ SFX.unlock(); $("unlockList").innerHTML = fresh.map(k => { const [key, v] = k.split(":"), name = AV3_OPTS[key].vals.find(x => x[0] === v)[1]; return `<div class="unlock">${avatar3({...PROFILE.avatar, [key]: v}, 58)}<span>${key === "frame" ? "Moldura" : "Fantasia"} <b>${name}</b> liberada!</span></div>`; }).join(""); $("unlockCard").classList.remove("hidden"); }
@@ -2046,20 +2308,20 @@ async function saveResult(){
   const s = G.score, before = unlocked(PROFILE);
   const best = Math.max(PROFILE.bestRound || 0, s), comp = G.complete ? 1 : 0, bw = G.bflyHits || 0;
   const av = {...migrateAvatar(PROFILE.avatar), v:3};
-  await setDoc(doc(db, "users", u.uid), { totalPoints: increment(s), rounds: increment(1), bestRound: best, boardsCompleted: increment(comp), bflyWords: increment(bw), name: PROFILE.name, avatar: av }, { merge: true });
+  await setDoc(doc(db, "users", u.uid), { [F("totalPoints")]: increment(s), rounds: increment(1), bestRound: best, boardsCompleted: increment(comp), bflyWords: increment(bw), name: PROFILE.name, avatar: av }, { merge: true });
   PROFILE.totalPoints = (PROFILE.totalPoints || 0) + s; PROFILE.rounds = (PROFILE.rounds || 0) + 1; PROFILE.bestRound = best;
   PROFILE.boardsCompleted = (PROFILE.boardsCompleted || 0) + comp; PROFILE.bflyWords = (PROFILE.bflyWords || 0) + bw;
   if (G.mode === "fase"){
-    const stars = {...(PROFILE.stars || {})}, key = String(G.level);
+    const stars = {...(PROFILE[F("stars")] || {})}, key = String(G.level);
     if (G.stars > (stars[key] || 0)) stars[key] = G.stars;
-    const level = Math.max(PROFILE.level || 1, G.passed ? G.level + 1 : 1);
-    await setDoc(doc(db, "users", u.uid), { level, stars }, { merge: true });
-    PROFILE.level = level; PROFILE.stars = stars; updLevelBtn(level);
+    const level = Math.max(PROFILE[F("level")] || 1, G.passed ? G.level + 1 : 1);
+    await setDoc(doc(db, "users", u.uid), { [F("level")]: level, [F("stars")]: stars }, { merge: true });
+    PROFILE[F("level")] = level; PROFILE[F("stars")] = stars; updLevelBtn(level);
   }
-  await setDoc(doc(db, "stats", "global"), { totalPoints: increment(s), rounds: increment(1) }, { merge: true });
-  await setDoc(doc(db, "weekly", weekKey(), "scores", u.uid), { points: increment(s), name: PROFILE.name, avatar: av }, { merge: true });
+  await setDoc(doc(db, "stats", LK("global")), { totalPoints: increment(s), rounds: increment(1) }, { merge: true });
+  await setDoc(doc(db, "weekly", LK(weekKey()), "scores", u.uid), { points: increment(s), name: PROFILE.name, avatar: av }, { merge: true });
   if (G.mode === "daily"){
-    const day = dayKey();
+    const day = LK(dayKey());
     const ref = doc(db, "daily", day, "scores", u.uid);
     const cur = await getDoc(ref);
     if (!cur.exists() || (cur.data().best || 0) < s) await setDoc(ref, { best: s, name: PROFILE.name, avatar: av });
