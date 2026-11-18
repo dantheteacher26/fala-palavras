@@ -2240,26 +2240,36 @@ function tryToken(k, allowFuzzy){
     const cand = G.targets.filter(t => !G.found.has(t) && Math.abs(t.length - k.length) <= 1 && lev(t, k) <= 1);
     if (cand.length === 1){ acceptTarget(cand[0]); return "target"; }
   }
+  // ouviu algo que não dá pra formar ("sim" sem a letra I): pega a palavra possível mais parecida ("sem")
+  if (allowFuzzy && k.length >= 3 && !G.bonus.has(k)){
+    const open = [...G.targets.filter(t => !G.found.has(t)), ...[...G.bonus].filter(t => !G.bonusFound.includes(t) && !G.targetSet.has(t))];
+    let cand = open.filter(t => t.length === k.length && lev(t, k) === 1);
+    if (cand.length > 1){ const V = /^(ei|ie|ou|uo|ao|oa|ae|ea)$/; cand = cand.filter(t => { for (let i = 0; i < t.length; i++) if (t[i] !== k[i]) return V.test(t[i] + k[i]); return false; }); }
+    if (cand.length === 1){ G.targetSet.has(cand[0]) ? acceptTarget(cand[0]) : acceptBonus(cand[0]); return "fuzzy"; }
+  }
   return null;
 }
+const HEARD = new Set(); let lastHeard = null;
 let pendingTok = null, pendingTimer = null, okWanted = 0;
 // botão ✓: valida na hora a última palavra ouvida (ou a próxima que chegar em até meio segundo)
 function okPress(){
   if (!G?.playing) return;
   SFX.tap();
   if (pendingTok && tryToken(pendingTok, true)){ clearTimeout(pendingTimer); pendingTok = null; $("okBtn").classList.remove("hasWord"); return; }
-  okWanted = Date.now();
-  try{ rec && rec.stop(); }catch(e){}           // fecha a frase na hora; o reconhecimento reinicia sozinho
+  // tenta a última palavra ouvida (mesmo que ainda não "fechada"), sem desligar o microfone
+  if (lastHeard && tryToken(lastHeard, true)){ lastHeard = null; return; }
+  okWanted = Date.now();                         // senão, a próxima palavra que chegar vale na hora
 }
 $("okBtn").addEventListener("pointerdown", e => { e.preventDefault(); okPress(); });
 function handleResult(res){
   if (!res.isFinal){
     const toks = res[0].transcript.trim().split(/\s+/).map(clean).filter(Boolean);
     // palavras já "fechadas" (tem outra depois) valem na hora
-    const tgt = k => G.targetSet.has(k) ? tryToken(k, false) : null;
-    for (let i = 0; i < toks.length - 1; i++) tgt(toks[i]) || tgt(toks[i] + toks[i+1]);
+    const tgt = k => (G.targetSet.has(k) || G.bonus.has(k)) ? tryToken(k, false) : null;
+    for (let i = 0; i < toks.length - 1; i++){ HEARD.add(toks[i]); tgt(toks[i]) || tgt(toks[i] + toks[i+1]); }
     // a última pode ainda estar sendo falada ("vir…" de "virei"): espera um instante pra ver se cresce
     const last = toks[toks.length - 1];
+    if (last) lastHeard = last;
     if (last && last !== pendingTok){
       clearTimeout(pendingTimer); pendingTok = last;
       const valid = G.targetSet.has(last);
@@ -2274,15 +2284,20 @@ function handleResult(res){
     return;
   }
   clearTimeout(pendingTimer); pendingTok = null;
-  let hit = false;
-  for (let a = 0; a < res.length && !hit; a++){
-    const toks = res[a].transcript.trim().split(/\s+/).map(clean);
-    if (trySpelled(toks)){ hit = true; break; }
-    for (let i = 0; i < toks.length; i++){
-      if (tryToken(toks[i], true)) hit = true;
-      else if (i + 1 < toks.length && tryToken(toks[i] + toks[i+1], false)) hit = true;   // "vi rei" → "virei"
-    }
+  // 1ª versão: tenta todas as palavras da frase
+  const t0 = res[0].transcript.trim().split(/\s+/).map(clean), miss = [];
+  if (!trySpelled(t0)) for (let i = 0; i < t0.length; i++){
+    if (tryToken(t0[i], true)) continue;
+    if (i + 1 < t0.length && tryToken(t0[i] + t0[i+1], false)){ i++; continue; }   // "vi rei" → "virei"
+    miss.push(i);
   }
+  // o que não deu certo: tenta nas outras versões que o reconhecimento sugeriu, na mesma posição
+  for (let a = 1; a < res.length && miss.length; a++){
+    const ta = res[a].transcript.trim().split(/\s+/).map(clean);
+    for (let j = miss.length - 1; j >= 0; j--){ const k = ta.length === t0.length ? ta[miss[j]] : null; if (k && tryToken(k, false)) miss.splice(j, 1); }
+  }
+  // palavras que apareceram no meio da fala e sumiram no final
+  HEARD.forEach(k => { if (!t0.includes(k)) tryToken(k, true); }); HEARD.clear();
   // se não entendeu, o professor fica quieto (sem perguntar nada)
 }
 /* ---- homófonos: "cela" e "sela", "concerto" e "conserto"... ---- */
