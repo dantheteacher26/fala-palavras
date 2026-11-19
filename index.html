@@ -126,6 +126,8 @@ h2{font-size:19px;margin:0 0 8px}
 .menuLogo{display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:10px}
 .menuLogo .trow .block{width:32px;height:37px;font-size:23px;opacity:1;transform:none}
 .menuHost{position:relative;flex:1;display:flex;justify-content:center;align-items:flex-end;min-height:150px;margin-top:4px;margin-bottom:-26px;position:relative;z-index:0}
+.menuHost.bust{margin-bottom:-3px}
+.menuHost.bust img{max-height:min(34vh,290px);max-width:86%}
 .menuHost img{max-height:min(38vh,320px);max-width:80%;filter:drop-shadow(0 10px 12px rgba(0,0,0,.45));animation:breathe 3.2s ease-in-out infinite;transform-origin:bottom center}
 .menuCenter{position:relative;z-index:1;display:flex;flex-direction:column;gap:12px;padding:0 6px}
 .playBig{border:3px solid #fff3b0;border-radius:22px;padding:12px;background:linear-gradient(180deg,#ffd76a,var(--gold));box-shadow:0 6px 0 var(--goldD),0 10px 18px rgba(0,0,0,.35);color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -375,6 +377,35 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
 @keyframes flap{0%{transform:scaleX(1)}100%{transform:scaleX(.2)}}
 @keyframes flapSlow{0%,60%{transform:scaleX(1)}100%{transform:scaleX(.55)}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* ===== visual 3D v20 ===== */
+.btn.gold{border:3px solid #a87400;background:linear-gradient(180deg,#fff0a8,#ffc93c 55%,#f0ad1c);color:#fff7e6;font-weight:900;-webkit-text-stroke:1.2px #6b4400;paint-order:stroke fill;text-shadow:0 2px 0 #6b4400;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.6),inset 0 -5px 0 rgba(160,100,0,.25),0 6px 0 #a87400,0 10px 14px rgba(0,0,0,.3)}
+.btn.gold svg{filter:drop-shadow(0 2px 0 #6b4400)}
+.btn.wood{border:3px solid #5e3716;font-weight:900;-webkit-text-stroke:1px #3e2410;paint-order:stroke fill;text-shadow:0 2px 0 #3e2410;box-shadow:inset 0 3px 0 rgba(255,255,255,.3),inset 0 -5px 0 rgba(0,0,0,.2),0 6px 0 #3e2410,0 10px 14px rgba(0,0,0,.3)}
+.btn.leaf{border:3px solid #1b5e35;font-weight:900;-webkit-text-stroke:1px #0f3d22;paint-order:stroke fill;text-shadow:0 2px 0 #0f3d22;box-shadow:inset 0 3px 0 rgba(255,255,255,.3),inset 0 -5px 0 rgba(0,0,0,.2),0 6px 0 #0f3d22,0 10px 14px rgba(0,0,0,.3)}
+.btn:active{transform:translateY(4px)}
+
+.trow .block{background:linear-gradient(180deg,#fff6df,#ecd3a3);border:2px solid #b38a55;color:var(--ink);text-shadow:0 1px 0 rgba(255,255,255,.6);font-weight:900;
+  box-shadow:inset 0 3px 0 #fff,inset 0 -4px 0 rgba(140,95,45,.25),0 5px 0 #8a6236,0 8px 8px rgba(0,0,0,.35)}
+.trow.gold .block{background:linear-gradient(180deg,#fff2b0,#ffc93c);border:2px solid #c8900a;color:var(--ink);box-shadow:inset 0 3px 0 #fffbe0,inset 0 -4px 0 rgba(160,100,0,.25),0 5px 0 #a87400,0 8px 8px rgba(0,0,0,.35)}
+.playBig{position:relative;border:4px solid #a87400;border-radius:24px;padding:12px 12px 14px;background:linear-gradient(180deg,#fff0a8,#ffc93c 55%,#f0ad1c);
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.65),inset 0 -6px 0 rgba(160,100,0,.25),0 8px 0 #a87400,0 14px 18px rgba(0,0,0,.38)}
+.playBig b{font-size:32px;font-weight:900;color:#fff7e6;-webkit-text-stroke:1.8px #6b4400;paint-order:stroke fill;text-shadow:0 3px 0 #6b4400,0 6px 8px rgba(0,0,0,.3)}
+.playBig b svg{filter:drop-shadow(0 3px 0 #6b4400)}
+.playBig span{font-size:20px;font-weight:900;color:#6b4400}
+.dailyCard{border:4px solid #5e3716;border-radius:22px;background:linear-gradient(180deg,#c88a50,#9a6232 60%,#7d4b22);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.3),inset 0 -5px 0 rgba(0,0,0,.2),0 7px 0 #3e2410,0 12px 16px rgba(0,0,0,.35)}
+.dailyCard b{font-size:22px;font-weight:900;color:#fff7e6;-webkit-text-stroke:1.4px #3e2410;paint-order:stroke fill;text-shadow:0 3px 0 #3e2410}
+.playBig:active,.dailyCard:active{transform:translateY(5px)}
+.titanCard{position:relative;overflow:visible;padding-left:96px;min-height:74px;border:4px solid #3c3f42;border-radius:20px 26px 18px 24px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='90'%3E%3Cg fill='none' stroke='%23353a3e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' opacity='.9'%3E%3Cpath d='M300 0 l-8 18 10 12 -14 22 6 14'/%3E%3Cpath d='M292 18 l-16 6'/%3E%3Cpath d='M150 90 l6 -16 -10 -10 8 -18'/%3E%3Cpath d='M30 0 l6 12 -6 10'/%3E%3Cpath d='M346 60 l-12 8 4 14'/%3E%3C/g%3E%3Cg fill='none' stroke='%23e9edf0' stroke-width='1.2' opacity='.45'%3E%3Cpath d='M302 1 l-8 18 10 12 -14 22 6 14'/%3E%3Cpath d='M152 89 l6 -16 -10 -10 8 -18'/%3E%3C/g%3E%3C/svg%3E") right center/cover no-repeat,
+    radial-gradient(circle at 20% 15%,rgba(255,255,255,.25),transparent 40%),linear-gradient(180deg,#a7adb3,#80878e 55%,#636a71);
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.35),inset 0 -6px 0 rgba(0,0,0,.25),0 8px 0 #2b2e31,0 14px 18px rgba(0,0,0,.4)}
+.titanCard b{font-size:25px;font-weight:900;color:#f4f7f9;-webkit-text-stroke:1.8px #24272a;paint-order:stroke fill;text-shadow:0 3px 0 #24272a,0 5px 8px rgba(0,0,0,.4);letter-spacing:.5px}
+.titanCard small{color:#1f2224;font-weight:800;opacity:.9}
+.titanCard .dIc{position:absolute;left:-8px;top:50%;transform:translateY(-56%) rotate(-10deg);width:100px;height:100px}
+.titanCard .dIc img{width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 6px 5px rgba(0,0,0,.5))}
 </style>
 </head>
 <body>
@@ -412,7 +443,7 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
   <div class="menuCenter">
     <button class="playBig" id="playFree"></button>
     <button class="dailyCard" id="playDaily"></button>
-    <button class="dailyCard titanCard hidden" id="playTitan"><span class="dIc">🔥</span><span><b>Desafio de Titãs</b><small>Só a voz · 1 minuto</small></span></button>
+    <button class="dailyCard titanCard hidden" id="playTitan"><span class="dIc" id="titanIc">🦍</span><span><b>Desafio de Titãs</b><small>Só a voz · 1 minuto</small></span></button>
     <div class="champs">
       <div class="champ plaque" id="champDay"></div>
       <div class="champ plaque" id="champWeek"></div>
@@ -623,7 +654,7 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
   </div>
 </div>
 
-<script>window.SPRITES = {"confused": {"src": "img-confused.webp?v=bf0471c9", "w": 680, "h": 640, "hair": 659}, "laugh": {"src": "img-laugh.webp?v=8ee3542d", "w": 664, "h": 600, "hair": 560}, "panic": {"src": "img-panic.webp?v=1f53025e", "w": 582, "h": 578, "hair": 560}, "jump": {"src": "img-jump.webp?v=549b7a7e", "w": 449, "h": 375, "hair": 385}, "sleep": {"src": "img-sleep.webp?v=a115fc03", "w": 397, "h": 455, "hair": 470}, "read": {"src": "img-read.webp?v=855e9eb4", "w": 540, "h": 555, "hair": 500}, "bg": {"src": "img-bg.webp?v=3a1f63e2"}, "readingFull": {"src": "img-readingFull.webp?v=030755f3", "w": 750, "h": 1038}, "thumbsFull": {"src": "img-thumbsFull.webp?v=ae5c4ba5", "w": 768, "h": 1084}, "cricket": {"src": "img-cricket.webp?v=63ea1505", "w": 520, "h": 428}, "hugBack": {"src": "img-hugBack.webp?v=d6683958", "w": 1024, "h": 765}, "hugFront": {"src": "img-hugFront.webp?v=21eaf89e", "w": 1024, "h": 765}, "hugBack_panic": {"src": "img-hugBack_panic.webp?v=a664c3b8", "w": 1024, "h": 765}, "hugFront_panic": {"src": "img-hugFront_panic.webp?v=a8add06a", "w": 1024, "h": 765}, "hugBack_look": {"src": "img-hugBack_look.webp?v=1e3ac8a8", "w": 1024, "h": 765}, "hugFront_look": {"src": "img-hugFront_look.webp?v=773f20b0", "w": 1024, "h": 765}, "papLupa": {"src": "img-papLupa.webp?v=bf0471c9", "w": 680, "h": 640}, "papRecord": {"src": "img-papRecord.webp?v=b184580c", "w": 700, "h": 525}, "papClock": {"src": "img-papClock.webp?v=df7bdff2", "w": 709, "h": 574}, "mk5": {"src": "img-mk5.webp?v=bc65c061", "w": 286, "h": 254}, "mk6": {"src": "img-mk6.webp?v=59eb72a7", "w": 306, "h": 309}, "mk7": {"src": "img-mk7.webp?v=71f35c84", "w": 243, "h": 330}}; addEventListener("load", () => setTimeout(() => { for (const k in SPRITES){ const i = new Image(); i.src = SPRITES[k].src; } }, 300));</script>
+<script src="imagens.js?v=38c32d1b"></script><script> addEventListener("load", () => setTimeout(() => { for (const k in SPRITES){ const i = new Image(); i.src = SPRITES[k].src; } }, 300));</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1009,7 +1040,7 @@ $("startBtn").innerHTML = `${I.play} Começar`;
 $("bgimg").style.backgroundImage = `url(${S.bg.src})`;
 Object.values(S).forEach(x => { const i = new Image(); i.src = x.src; });
 const sizeBy = (img, key, hairPx) => { img.src = S[key].src; img.style.width = Math.round(S[key].w * hairPx / S[key].hair) + "px"; };
-$("homeHost").src = S.readingFull.src;
+$("homeHost").src = (S.papLupa || S.readingFull).src; $("homeHost").parentElement.classList.toggle("bust", !!S.papLupa);
 sizeBy($("extraHost"), "panic", 120);
 $("t1").innerHTML = [..."FALA"].map(c => `<span class="block">${c}</span>`).join("");
 $("t2").innerHTML = [..."PALAVRAS"].map(c => `<span class="block">${c}</span>`).join("");
@@ -2229,7 +2260,7 @@ async function loadTitanRank(){
     list.innerHTML = h;
   }catch(e){ list.innerHTML = `<li class="muted">Não consegui carregar o ranking.</li>`; }
 }
-$("playTitan").classList.toggle("hidden", !FASES_ON);
+$("playTitan").classList.toggle("hidden", !FASES_ON); if (S.mk7) $("titanIc").innerHTML = `<img src="${S.mk7.src}" alt="">`;
 if (FASES_ON){ $("repTitle").textContent = "Faltou alguma palavra?"; $("repText").textContent = "Escreve aqui que o Professor Papius adiciona ao dicionário!"; $("repOk").textContent = "Enviar pro Papius"; $("repNo").classList.add("hidden"); }
 $("playTitan").onclick = () => { audioInit(); SFX.wood(); fadeTo(() => { show("titan"); renderTitanMenu(); MUSIC.play("menu"); }); };
 addEventListener("resize", () => { if (T?.playing) tBubble(); });
