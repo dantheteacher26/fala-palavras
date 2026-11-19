@@ -1,0 +1,38 @@
+# Fala Palavras — fases em português
+# Formato: PALAVRA | dica | outras palavras que valem (separadas por vírgula)
+# Pode editar à vontade: só valem as palavras escritas aqui.
+
+# ===== 5 letras =====
+PRATO | No fim do almoço de domingo, sempre sobra um pra você lavar. | rato, pato, rota, porta, tropa, parto, topar, trapo
+LIVRO | Aquele que você compra animado e usa de peso de porta. | rio, vir, viro
+PEDRA | Tem no caminho, no sapato e no rim. | pera, pare, dar, perda, padre
+FESTA | O lugar onde seu tio conta a mesma piada há 15 anos. | seta, fase, esta, feta, até, set
+PRAIA | Você vai pra relaxar e volta com areia até na alma. | para, pira, pari, paria, raia, ria, ara, aia
+CHUVA | Aparece exatamente no dia em que você lavou o carro. | uva, chá
+NOITE | Começa às 22h e termina quando acaba a bateria do celular. | tio, neto, note, tino
+TIGRE | O gato que ninguém tem coragem de chamar de "bichano". | tire, grite, geri, rei
+SALTO | Alto demais e o casamento termina descalço. | alto, lota, solta, altos, tolas, talos, lotas
+
+# ===== 6 letras =====
+CAMISA | Só manchou porque você foi comer de branco. | casa, cais, asma, saci, macia
+JANELA | Sua mãe abria pra gritar seu nome na rua. | anel, nela, naja, ala
+PANELA | Na casa da vó, a de pressão é patrimônio da família. | anel, pena, pane, pala
+ESCOLA | Onde você aprendeu Bhaskara e nunca mais usou. | cola, sola, cela, selo, caso, saco
+MACACO | Seu primo na festa de criança. | maca, caco, coma, cama, oca, coa
+CAVALO | Dá coice, come capim e é mais caro que o seu carro. | vaca, vala, lava, cola, calo, calvo
+PLANTA | Você compra, conversa com ela e mesmo assim ela morre. | lata, nata, pata, plana
+TOMATE | É fruta, mas ninguém tem coragem de colocar na salada de frutas. | mato, mate, meta, tema, teto, toma, totem
+SAPATO | Aperta no casamento e some na hora de dançar. | pato, sapo, sopa, topa, aspa, pata, pasta, pasto, posta, tapas
+PAREDE | Tem ouvidos, segundo a sua avó. | era, pera, pare, rede, pede, pedra, perda, padre
+
+# ===== 7 letras =====
+CADEIRA | Em casa, também serve de cabide. | cara, ceia, raia, areia, criada
+ESTRELA | Todo mundo quer ser uma, mas ela está a anos-luz daqui. | tela, sela, seta, esta, resta, letra, letras
+CENOURA | Dizem que faz bem pra vista, e ninguém nunca viu coelho de óculos. | rua, cano, caro, cura, arco
+SORVETE | O pote dele lá na sua casa guarda feijão. | veto, tese, sorte, resto, verso
+TESOURA | Nunca está na gaveta quando você precisa dela. | rua, rota, autor, surto, sorte, resto
+PANTERA | A rosa dela é a mais famosa dos desenhos animados. | pena, nata, parte, prata, perna
+MORANGO | Vai no bolo e, se for do supermercado, não tem gosto de nada. | amor, ramo, goma, morno
+CASTELO | Toda criança quer um de areia, até a onda chegar. | selo, cela, tela, lote, costa, salto, costela
+PALAVRA | O que você não consegue cumprir quando começa a dieta. | vara, lava, para, alva, lavar
+PIMENTA | Arde na boca e, no dia seguinte, arde de novo. | pena, meta, mate, menta, pinta, mentia
