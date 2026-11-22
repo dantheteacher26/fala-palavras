@@ -1113,6 +1113,7 @@ const SFX = {
   complete(){ if (!AC) return; const t = AC.currentTime; [523,659,784,1047].forEach((f,i) => tone(f, t + i*.12, .5, "triangle", .3)); [1047,1319,1568].forEach(f => tone(f, t + .55, 1.1, "triangle", .2)); },
   star(i){ if (!AC) return; const t = AC.currentTime, f = [0, 1047, 1319, 1568][i]; tone(f, t, .4, "triangle", .3); tone(f * 2, t + .05, .3, "sine", .12); },
   grito(){ if (!AC || !GRITO) return; const s = AC.createBufferSource(); s.buffer = GRITO; s.connect(sfxGain); s.start(); },
+  gritoCurto(){ const b = GRITO2 || GRITO; if (!AC || !b) return; const s = AC.createBufferSource(); s.buffer = b; s.connect(sfxGain); s.start(); },
   cricri(){ if (!AC || !CRICRI) return; const s = AC.createBufferSource(); s.buffer = CRICRI; s.connect(sfxGain); s.start(); },
   start(){ if (!AC) return; const t = AC.currentTime; [392,523,659].forEach((f,i) => tone(f, t + i*.1, .25, "triangle", .25)); },
   wood(){ if (!AC) return; const t = AC.currentTime; tone(520 + Math.random()*120, t, .09, "triangle", .18, sfxGain, 300); },
@@ -1120,7 +1121,7 @@ const SFX = {
 };
 
 /* música: arquivos mp3 (abertura/menu e fases) */
-let GRITO = null, CRICRI = null;
+let GRITO = null, GRITO2 = null, CRICRI = null;
 const MUSIC = (() => {
   const el = new Audio(); el.loop = true; el.preload = "auto";
   let src = null, node = null;
@@ -1141,7 +1142,8 @@ const MUSIC = (() => {
 })();
 function loadGrito(){
   if (!AC || GRITO) return;
-  fetch("grito.mp3").then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { GRITO = buf; }).catch(() => {});
+  fetch("grito.mp3?v=3").then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { GRITO = buf; }).catch(() => {});
+  fetch("grito-curto.mp3?v=1").then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { GRITO2 = buf; }).catch(() => {});
   fetch("cricri.mp3").then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { CRICRI = buf; }).catch(() => {});
 }
 
@@ -1165,7 +1167,13 @@ addEventListener("pagehide", onHidden);
 addEventListener("blur", () => { if (document.hidden) onHidden(); });
 
 /* ================= IDIOMA ================= */
-function setLang(id){ if (id === LANG_ID) return; store.set("fp_lang", id); location.reload(); }
+function setLang(id){
+  if (id === LANG_ID) return; store.set("fp_lang", id);
+  // lembra em que tela estava, pra voltar direto pra ela depois de trocar a língua
+  const vis = ["titan", "map", "home"].find(x => $(x) && !$(x).classList.contains("hidden"));
+  try{ sessionStorage.setItem("fp_resume", $("splash").classList.contains("hidden") ? (vis || "home") : "splash"); }catch(e){}
+  location.reload();
+}
 const langButtons = () => Object.entries(LANGS).map(([id, L]) => `<button data-l="${id}" class="${id === LANG_ID ? "on" : ""}">${L.flag} ${L.name}</button>`).join("");
 $("langRow").innerHTML = langButtons(); $("langPick").innerHTML = langButtons();
 $("langRow").onclick = $("langPick").onclick = e => { const b = e.target.closest("button[data-l]"); if (b) setLang(b.dataset.l); };
@@ -1199,6 +1207,16 @@ $("startBtn").onclick = () => {
   audioInit(); loadGrito(); SFX.start(); MUSIC.play("menu");
   fadeTo(() => { $("splash").classList.add("hidden"); show("home"); if (auth.currentUser && !PROFILE?.name) openAvatar(); }, 450);
 };
+
+setTimeout(() => {
+  let r = null; try{ r = sessionStorage.getItem("fp_resume"); sessionStorage.removeItem("fp_resume"); }catch(e){}
+  if (!r || r === "splash") return;
+  $("splash").classList.add("hidden"); show(r);
+  if (r === "titan") renderTitanMenu(); if (r === "map") renderMap();
+  // o som só pode começar depois do primeiro toque
+  const go = () => { removeEventListener("pointerdown", go, true); audioInit(); loadGrito(); MUSIC.play("menu"); };
+  addEventListener("pointerdown", go, true);
+}, 0);
 
 /* ================= PALAVRAS ================= */
 const DICT = new Map(), RANK = new Map();
@@ -2359,7 +2377,7 @@ function titanHit(){
   T.lock = true; T.hits.push(T.cur);
   const shown = (DICT.get(T.cur) || T.cur), box = $("tLetters");
   box.innerHTML = [...shown.toUpperCase()].map(c => `<div class="ok">${esc(c)}</div>`).join("");
-  SFX.plim(); SFX.grito(); tPose("thumbsFull", pick(TT(["Isso aí!", "Muito bem!", "Arrasou!", "Que fera!", "Boa!"], ["Yes!", "Well done!", "Awesome!", "Nailed it!", "Great!"], ["Ez az!", "Szuper!", "Ügyes!", "Nagyon jó!", "Bravó!"])));
+  SFX.plim(); SFX.gritoCurto(); tPose("thumbsFull", pick(TT(["Isso aí!", "Muito bem!", "Arrasou!", "Que fera!", "Boa!"], ["Yes!", "Well done!", "Awesome!", "Nailed it!", "Great!"], ["Ez az!", "Szuper!", "Ügyes!", "Nagyon jó!", "Bravó!"])));
   updTitan();
   // a palavra certa desliza pra fora e a próxima já entra embaralhada
   setTimeout(() => {
