@@ -387,6 +387,7 @@ input[type=text]{width:100%;padding:12px;font-size:17px;border-radius:14px;borde
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
 /* ===== visual 3D v20 ===== */
+.noVoice .hud .mic{display:none}
 .btn.gold{border:3px solid #a87400;background:linear-gradient(180deg,#fff0a8,#ffc93c 55%,#f0ad1c);color:#fff7e6;font-weight:900;-webkit-text-stroke:1.2px #6b4400;paint-order:stroke fill;text-shadow:0 2px 0 #6b4400;
   box-shadow:inset 0 3px 0 rgba(255,255,255,.6),inset 0 -5px 0 rgba(160,100,0,.25),0 6px 0 #a87400,0 10px 14px rgba(0,0,0,.3)}
 .btn.gold svg{filter:drop-shadow(0 2px 0 #6b4400)}
@@ -1145,16 +1146,18 @@ function loadGrito(){
 }
 
 /* som para quando a pessoa sai da página; a rodada fica pausada e volta quando ela retorna */
+addEventListener("pagehide", () => { micOff(); wakeOff(); });
 function onHidden(){
   MUSIC.stop();
   if (AC && AC.state === "running") AC.suspend();
-  if (G?.playing){ G.paused = true; G.playing = false; clearInterval(G.timer); try{ rec && rec.abort(); }catch(e){} }
-  if (T?.playing){ T.paused = true; T.playing = false; clearInterval(T.timer); try{ rec && rec.abort(); }catch(e){} }
+  if (G?.playing){ G.paused = true; G.playing = false; clearInterval(G.timer); micOff(); }
+  if (T?.playing){ T.paused = true; T.playing = false; clearInterval(T.timer); micOff(); }
 }
 function onVisible(){
   if (AC && AC.state === "suspended") AC.resume();
   if (musicOn && $("splash").classList.contains("hidden")) MUSIC.play();
-  if (T?.paused){ T.paused = false; T.playing = true; if (SR) startRec(); titanTimer(); }
+  if (T?.paused){ T.paused = false; T.playing = true; if (SR) startRec(); titanTimer(); wakeOn(); }
+  if (G?.playing) wakeOn();
   if (G?.paused && G.started){ G.paused = false; G.playing = true; G.lastVoice = Date.now(); if (SR) startRec(); startTimer(); }
 }
 document.addEventListener("visibilitychange", () => document.hidden ? onHidden() : onVisible());
@@ -1778,7 +1781,7 @@ const FRAME_RULES = {
   prata:    {t:"Jogue 25 partidas", ok:p => (p.rounds || 0) >= 25},
   ouro:     {t:"Só o campeão de ontem", ok:() => false, title:"day"},
   diamante: {t:"Só o campeão da semana passada", ok:() => false, title:"week"},
-  esmeralda:{t:"Acerte 10 palavras no Expert do Desafio de Titãs", ok:p => (p.titan7 || 0) >= 10}
+  esmeralda:{t:"Acerte 10 palavras no Expert do Desafio de Titãs", ok:p => Math.max(p.titan7 || 0, p.titan7_en || 0, p.titan7_hu || 0) >= 10}
 };
 function showHood(fresh, av){
   const h = fresh.map(k => k.split(":")[1]).find(v => HOOD_ORDER.includes(v)); if (!h) return;
@@ -1932,7 +1935,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
 });
 async function loadRanking(){
   const list = $("rankList");
-  list.innerHTML = `<li class="muted">Carregando…</li>`;
+  list.innerHTML = `<li class="muted">${TT("Carregando…", "Loading…", "Betöltés…")}</li>`;
   try{
     const daily = TAB === "daily", field = {daily:"best", week:"points", all:F("totalPoints")}[TAB];
     const q = TAB === "daily" ? query(collection(db, "daily", LK(dayKey()), "scores"), orderBy("best", "desc"), limit(20))
@@ -1948,7 +1951,7 @@ async function loadRanking(){
       });
       list.innerHTML = h;
     }
-  }catch(e){ list.innerHTML = `<li class="muted">Não consegui carregar o ranking.</li>`; }
+  }catch(e){ list.innerHTML = `<li class="muted">${TT("Não consegui carregar o ranking.", "Couldn't load the ranking.", "Nem sikerült betölteni a ranglistát.")}</li>`; }
   loadAvg();
 }
 async function loadChamps(){
@@ -2244,31 +2247,56 @@ addEventListener("resize", () => { if (G?.playing){ layoutWheel(); renderBoard()
 
 /* ================= DESAFIO DE TITÃS ================= */
 // palavras que só formam elas mesmas com todas as letras
-const TITAN_WORDS = {
+const TT = (pt, en, hu) => LANG_ID === "en" ? en : LANG_ID === "hu" ? hu : pt;
+const TITAN_ALL = {
+ en: {
+  5: "chair tiger zebra pizza house mouse happy music water queen juice apple ghost piano robot truck joker sugar fruit candy beach world thumb knife river",
+  6: "banana monkey purple yellow jungle pencil rocket bottle summer doctor wizard butter coffee cheese guitar potato turtle puzzle circus bridge school hungry family winter",
+  7: "chicken dolphin balloon penguin giraffe library rainbow freedom journey holiday pumpkin captain blanket compass diamond fishing morning volcano tornado unicorn vampire bicycle"
+ },
+ hu: {
+  5: "kutya tojás virág könyv barát torta labda vonat fagyi csoki papír majom tükör gomba kalap meggy lámpa kacsa rádió doboz csiga játék hétfő zokni kabát pizza",
+  6: "zsiráf tigris kenyér mosoly csirke iskola farkas tenger varázs herceg király palack árnyék szerda ceruza",
+  7: "kastély vacsora kolbász kertész esernyő telefon bicikli pulóver malacka tanárnő borotva sárkány csillag papagáj"
+ },
+ pt: {
   5: "luxar chuva livro festa peixe zebra bolha junho julho mundo nuvem pulga chave samba pizza bicho filme ninja burro banho cinco campo",
   6: "girafa queijo janela macaco cavalo banana cabelo pijama bigode coelho frango joelho abelha orelha tucano panela tomate escova chutar jardim",
   7: "caminho chinelo foguete mochila lagosta bolacha minhoca vizinho morango cenoura tesoura sorvete cadeira pimenta palavra esquilo galinha brincar abacaxi"
+ }
 };
-const TITAN_LV = [[5, "Médio", "🐒"], [6, "Difícil", "🐵"], [7, "Expert", "🦍"]];
+const TITAN_WORDS = TITAN_ALL[LANG_ID] || null;
+const TITAN_LV = [[5, TT("Médio", "Medium", "Közepes"), "🐒"], [6, TT("Difícil", "Hard", "Nehéz"), "🐵"], [7, TT("Expert", "Expert", "Mester"), "🦍"]];
 const TITAN_IMG = { 5: S.mk5?.src, 6: S.mk6?.src, 7: S.mk7?.src };
 let T = null, T_TAB = 7, TMUS = -1;
-const tKey = n => "titan" + n, tWeek = n => LK("titan" + n + "-" + weekKey());
+const tKey = n => F("titan" + n), tWeek = n => LK("titan" + n + "-" + weekKey());
 function renderTitanMenu(){
-  $("titanLevels").innerHTML = TITAN_LV.map(([n, name, ic]) => `<button class="tLvl t${n}" data-n="${n}"><span class="gem">${TITAN_IMG[n] ? `<img src="${TITAN_IMG[n]}">` : ic}</span><span><b>${name}</b><small>${n} letras</small></span><span class="best">recorde<span>${PROFILE?.[tKey(n)] || 0}</span></span></button>`).join("");
+  $("titanLevels").innerHTML = TITAN_LV.map(([n, name, ic]) => `<button class="tLvl t${n}" data-n="${n}"><span class="gem">${TITAN_IMG[n] ? `<img src="${TITAN_IMG[n]}">` : ic}</span><span><b>${name}</b><small>${n} ${TT("letras", "letters", "betű")}</small></span><span class="best">${TT("recorde", "record", "rekord")}<span>${PROFILE?.[tKey(n)] || 0}</span></span></button>`).join("");
   $("tTabs").innerHTML = TITAN_LV.map(([n, name]) => `<button data-n="${n}" class="${n === T_TAB ? "on" : ""}">🏆 ${name}</button>`).join("");
   loadTitanRank();
 }
 async function loadTitanRank(){
-  const list = $("tRankList"); list.innerHTML = `<li class="muted">Carregando…</li>`;
+  const list = $("tRankList"); list.innerHTML = `<li class="muted">${TT("Carregando…", "Loading…", "Betöltés…")}</li>`;
   try{
     const snap = await getDocs(query(collection(db, "weekly", tWeek(T_TAB), "scores"), orderBy("points", "desc"), limit(10)));
-    if (snap.empty){ list.innerHTML = `<li class="muted">Ninguém jogou essa semana. Seja o primeiro titã!</li>`; return; }
+    if (snap.empty){ list.innerHTML = `<li class="muted">${TT("Ninguém jogou essa semana. Seja o primeiro titã!", "No one has played this week. Be the first titan!", "Ezen a héten még senki nem játszott. Légy te az első titán!")}</li>`; return; }
     let i = 0, h = "";
     snap.forEach(d => { const x = d.data(); i++; h += `<li><span class="medal ${i <= 3 ? "m" + i : ""}">${i}</span>${avatarSVG(x.avatar, 36, d.id)}<span class="rname">${esc(x.name || "Jogador")}</span><span class="rpts">${x.points || 0}</span></li>`; });
     list.innerHTML = h;
-  }catch(e){ list.innerHTML = `<li class="muted">Não consegui carregar o ranking.</li>`; }
+  }catch(e){ list.innerHTML = `<li class="muted">${TT("Não consegui carregar o ranking.", "Couldn't load the ranking.", "Nem sikerült betölteni a ranglistát.")}</li>`; }
 }
-$("playTitan").classList.toggle("hidden", !FASES_ON); if (S.mk7) $("titanIc").innerHTML = `<img src="${S.mk7.src}" alt="">`;
+$("playTitan").classList.toggle("hidden", !TITAN_WORDS);
+$("playTitan").querySelector("b").textContent = TT("Desafio de Titãs", "Titans Challenge", "Titánok kihívása");
+$("playTitan").querySelector("small").textContent = TT("Só a voz · 1 minuto", "Voice only · 1 minute", "Csak hanggal · 1 perc");
+document.querySelector(".tTitle").textContent = TT("DESAFIO DE TITÃS", "TITANS CHALLENGE", "TITÁNOK KIHÍVÁSA");
+document.querySelector(".tSub").innerHTML = TT(`Você tem <b>1 minuto</b> pra acertar o maior número de palavras. É só falar! Diga <b>"embaralha"</b> pra misturar as letras.`,
+  `You have <b>1 minute</b> to guess as many words as you can. Just say them! Say <b>"shuffle"</b> to mix the letters.`,
+  `<b>1 perced</b> van, hogy minél több szót kitalálj. Csak mondd ki! Mondd, hogy <b>„keverd”</b>, és összekeverem a betűket.`);
+$("tMic").lastChild.textContent = TT("Ouvindo", "Listening", "Figyelek");
+$("tEnd").querySelector("h2").textContent = TT("Tempo!", "Time's up!", "Lejárt az idő!");
+$("tEnd").querySelector(".muted").textContent = TT("Você acertou", "You got", "Eltaláltál");
+$("tAgain").textContent = "↻ " + TT("Jogar de novo", "Play again", "Újra");
+$("tMenu").textContent = TT("Voltar", "Back", "Vissza"); document.body.classList.toggle("noVoice", FASES_ON); if (S.mk7) $("titanIc").innerHTML = `<img src="${S.mk7.src}" alt="">`;
 if (FASES_ON){ $("repTitle").textContent = "Faltou alguma palavra?"; $("repText").textContent = "Escreve aqui que o Professor Papius adiciona ao dicionário!"; $("repOk").textContent = "Enviar pro Papius"; $("repNo").classList.add("hidden"); }
 $("playTitan").onclick = () => { audioInit(); SFX.wood(); fadeTo(() => { show("titan"); renderTitanMenu(); MUSIC.play("menu"); }); };
 addEventListener("resize", () => { if (T?.playing) tBubble(); });
@@ -2276,7 +2304,7 @@ $("tBack").onclick = () => fadeTo(() => show("home"));
 $("tTabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; T_TAB = +b.dataset.n; renderTitanMenu(); });
 $("titanLevels").addEventListener("click", e => { const b = e.target.closest(".tLvl"); if (b) startTitan(+b.dataset.n); });
 $("tExit").innerHTML = I.door; $("tShuf").innerHTML = I.shuffle;
-$("tExit").onclick = () => { stopTitan(); fadeTo(() => { show("titan"); renderTitanMenu(); MUSIC.play("menu"); }); };
+$("tExit").onclick = () => { stopTitan(); wakeOff(); fadeTo(() => { show("titan"); renderTitanMenu(); MUSIC.play("menu"); }); };
 $("tShuf").onclick = () => titanShuffle();
 $("tAgain").onclick = () => startTitan(T.n);
 $("tMenu").onclick = () => { $("tEnd").classList.add("hidden"); show("titan"); renderTitanMenu(); MUSIC.play("menu"); };
@@ -2292,15 +2320,15 @@ function startTitan(n){
   show("titanPlay");
   TMUS = (TMUS + 1 + Math.floor(Math.random() * (MUSIC_FILES.fases.length - 1))) % MUSIC_FILES.fases.length;
   MUSIC.play("jogo", MUSIC_FILES.fases[TMUS]);
-  nextTitan(); updTitan(); SFX.start();
-  if (SR) startRec(); else $("tSay").textContent = "Este navegador não tem microfone 😢";
+  nextTitan(); updTitan(); SFX.start(); wakeOn();
+  if (SR) startRec(); else $("tSay").textContent = TT("Este navegador não tem microfone 😢", "This browser has no voice recognition 😢", "Ez a böngésző nem ismeri fel a hangot 😢");
   titanTimer();
 }
 function titanTimer(){
   clearInterval(T.timer);
   T.timer = setInterval(() => { T.time--; updTitan(); if (T.time <= 5 && T.time > 0) SFX.tick(); if (T.time <= 0) endTitan(); }, 1000);
 }
-function stopTitan(){ if (!T) return; T.playing = false; T.paused = false; clearInterval(T.timer); try{ rec && rec.abort(); }catch(e){} }
+function stopTitan(){ if (!T) return; T.playing = false; T.paused = false; clearInterval(T.timer); micOff(); }
 function tBubble(){
   const im = $("tHost"), st = im.parentElement; if (!im.complete || !im.naturalHeight) return;
   const h = im.offsetHeight, bust = im.classList.contains("bust");
@@ -2312,12 +2340,12 @@ function tPose(k, say){
   if (say && $("tSay").innerHTML !== say){ const b = $("tSay"); b.innerHTML = say; b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
   tBubble();
 }
-function tRest(){ T.time <= 10 ? tPose("papClock", "Corre! Tá acabando!") : tPose("readingFull", "Fale a palavra!"); }
+function tRest(){ T.time <= 10 ? tPose("papClock", TT("Corre! Tá acabando!", "Hurry! Time's running out!", "Siess! Mindjárt lejár!")) : tPose("readingFull", TT("Fale a palavra!", "Say the word!", "Mondd ki a szót!")); }
 function updTitan(){
   const tt = Math.max(0, T.time); $("tTimer").textContent = Math.floor(tt / 60) + ":" + String(tt % 60).padStart(2, "0");
   $("tTimer").classList.toggle("low", T.time <= 10);
   if (T.playing && !T.lock && !T.lupa) tRest();
-  $("tCount").textContent = `✔ ${T.hits.length} palavra${T.hits.length === 1 ? "" : "s"}`;
+  const nh = T.hits.length; $("tCount").textContent = `✔ ${nh} ` + TT(nh === 1 ? "palavra" : "palavras", nh === 1 ? "word" : "words", "szó");
 }
 function scramble(w){ let a; let k = 0; do { a = shuffleArr(w.split("")); } while (a.join("") === w && ++k < 20); return a; }
 function nextTitan(slide){
@@ -2331,7 +2359,7 @@ function titanHit(){
   T.lock = true; T.hits.push(T.cur);
   const shown = (DICT.get(T.cur) || T.cur), box = $("tLetters");
   box.innerHTML = [...shown.toUpperCase()].map(c => `<div class="ok">${esc(c)}</div>`).join("");
-  SFX.plim(); SFX.grito(); tPose("thumbsFull", pick(["Isso aí!", "Muito bem!", "Arrasou!", "Que fera!", "Boa!"]));
+  SFX.plim(); SFX.grito(); tPose("thumbsFull", pick(TT(["Isso aí!", "Muito bem!", "Arrasou!", "Que fera!", "Boa!"], ["Yes!", "Well done!", "Awesome!", "Nailed it!", "Great!"], ["Ez az!", "Szuper!", "Ügyes!", "Nagyon jó!", "Bravó!"])));
   updTitan();
   // a palavra certa desliza pra fora e a próxima já entra embaralhada
   setTimeout(() => {
@@ -2357,28 +2385,29 @@ function titanResult(res, idx){
   if (!T?.playing || T.lock) return;
   const m = T.cur, srt = w => [...w].sort().join(""), sm = srt(m);
   // "embaralha" falado: conta quantas vezes apareceu nessa frase pra não embaralhar repetido
-  const said = (res[0].transcript.match(/embaralh|mistur/gi) || []).length;
+  const said = (res[0].transcript.match(/embaralh|mistur|shuffl|\bmix|kever/gi) || []).length;
   if (said > (T.cmd[idx] || 0)){ T.cmd[idx] = said; titanShuffle(); return; }
   for (let a = 0; a < res.length; a++){
     const toks = res[a].transcript.trim().split(/\s+/).map(clean).filter(Boolean);
     const cands = [...toks, toks.join("")]; for (let i = 0; i + 1 < toks.length; i++) cands.push(toks[i] + toks[i+1]);
-    const ok = k => k === m || (k.length >= 3 && srt(k) !== sm && (phon(k) === phon(m) || (Math.abs(k.length - m.length) <= 1 && lev(k, m) <= (m.length >= 7 ? 2 : 1))));
+    const pm = phon(m);
+    const ok = k => k === m || (k.length >= 3 && srt(k) !== sm && (phon(k) === pm || (Math.abs(k.length - m.length) <= 1 && lev(k, m) <= (m.length >= 7 ? 2 : 1)) || (m.length >= 5 && lev(phon(k), pm) <= 1)));
     if (cands.some(ok)){ titanHit(); return; }
   }
   // ouviu algo que não é a palavra: o Papius confere com a lupa
-  if (res.isFinal && res[0].transcript.trim().length >= 3){ clearTimeout(T.lupa); tPose("papLupa", "Hmm… não é essa!"); T.lupa = setTimeout(() => { T.lupa = 0; if (T.playing && !T.lock) tRest(); }, 1300); }
+  if (res.isFinal && res[0].transcript.trim().length >= 3){ clearTimeout(T.lupa); tPose("papLupa", TT("Hmm… não é essa!", "Hmm… not that one!", "Hmm… nem ez az!")); T.lupa = setTimeout(() => { T.lupa = 0; if (T.playing && !T.lock) tRest(); }, 1300); }
 }
 async function endTitan(){
-  stopTitan(); SFX.timeOut();
+  stopTitan(); wakeOff(); SFX.timeOut();
   const n = T.n, c = T.hits.length, key = tKey(n), before = unlocked(PROFILE), best = PROFILE?.[key] || 0;
-  $("tScore").textContent = c; $("tWl").textContent = (c === 1 ? "palavra" : "palavras") + " em 1 minuto";
-  $("tWords").innerHTML = T.hits.length ? T.hits.map(k => `<span>${esc(DICT.get(k) || k)}</span>`).join("") : `<span class="muted" style="background:none;border:0">Nenhuma desta vez. Bora de novo!</span>`;
-  $("tRec").innerHTML = c > best ? `${S.papRecord ? `<img src="${S.papRecord.src}" style="height:170px;display:block;margin:0 auto 4px">` : ""}${best ? "🏆 Novo recorde!" : "🏆 Seu primeiro recorde!"}` : `Seu recorde: ${best}`;
+  $("tScore").textContent = c; $("tWl").textContent = TT((c === 1 ? "palavra" : "palavras") + " em 1 minuto", (c === 1 ? "word" : "words") + " in 1 minute", "szó 1 perc alatt");
+  $("tWords").innerHTML = T.hits.length ? T.hits.map(k => `<span>${esc(DICT.get(k) || k)}</span>`).join("") : `<span class="muted" style="background:none;border:0">${TT("Nenhuma desta vez. Bora de novo!", "None this time. Let's go again!", "Most egy sem. Próbáld újra!")}</span>`;
+  $("tRec").innerHTML = c > best ? `${S.papRecord ? `<img src="${S.papRecord.src}" style="height:170px;display:block;margin:0 auto 4px">` : ""}${best ? TT("🏆 Novo recorde!", "🏆 New record!", "🏆 Új rekord!") : TT("🏆 Seu primeiro recorde!", "🏆 Your first record!", "🏆 Az első rekordod!")}` : `${TT("Seu recorde", "Your record", "A rekordod")}: ${best}`;
   if (PROFILE && c > best) PROFILE[key] = c;
   const got = PROFILE && unlocked(PROFILE).has("frame:esmeralda");
   $("tFrame").innerHTML = n !== 7 ? "" : got && !before.has("frame:esmeralda")
-    ? `<div style="display:flex;align-items:center;gap:10px;justify-content:center">${avatar3({...migrateAvatar(PROFILE.avatar), frame: "esmeralda"}, 70)}<b>Moldura de Esmeralda conquistada!</b></div>`
-    : got ? "" : `<p class="muted" style="margin:4px 0 8px">Acerte <b>10</b> palavras no Expert pra ganhar a <b>Moldura de Esmeralda</b>.</p>`;
+    ? `<div style="display:flex;align-items:center;gap:10px;justify-content:center">${avatar3({...migrateAvatar(PROFILE.avatar), frame: "esmeralda"}, 70)}<b>${TT("Moldura de Esmeralda conquistada!", "Emerald Frame unlocked!", "Megszerezted a Smaragd keretet!")}</b></div>`
+    : got ? "" : `<p class="muted" style="margin:4px 0 8px">${TT("Acerte <b>10</b> palavras no Expert pra ganhar a <b>Moldura de Esmeralda</b>.", "Get <b>10</b> words in Expert to win the <b>Emerald Frame</b>.", "Találj ki <b>10</b> szót Mester szinten, és tiéd a <b>Smaragd keret</b>!")}</p>`;
   $("tEnd").classList.remove("hidden");
   if (c > 0) confetti();
   MUSIC.play("menu");
@@ -2478,7 +2507,7 @@ function tutHandDrag(){
 const TUT_STEPS = [
   { el: null, text: () => `Oi${PROFILE?.name ? ", " + esc(PROFILE.name) : ""}! Eu sou o <b>Professor Papius</b>. Vou te mostrar como jogar!` },
   { el: () => $("wheel"), wait: true, text: () => FASES_ON ? `Vamos fazer um teste: <b>arraste o dedo</b> de uma letra pra outra e forme uma palavra!` : SR ? `Vamos fazer um teste: <b>fale uma palavra</b> com as letras aqui embaixo. Pode falar, eu tô ouvindo! 🎤` : `Forme uma palavra com essas letras!` },
-  { el: () => $("wheel"), hand: true, text: () => FASES_ON ? `A <b>palavra principal</b> (a dos quadradinhos amarelos) usa todas as letras. Essa você também pode <b>falar</b>! 🎤` : `Você também pode construir as palavras <b>manualmente, arrastando</b> de uma letra pra outra.` },
+  { el: () => $("wheel"), hand: true, text: () => FASES_ON ? `A <b>palavra principal</b> (a dos quadradinhos amarelos) usa todas as letras. Ache ela pra passar de fase!` : `Você também pode construir as palavras <b>manualmente, arrastando</b> de uma letra pra outra.` },
   { el: () => $("okBtn"), skipIf: () => !SR && !FASES_ON, text: () => FASES_ON ? `Travou? Toque na <b>lâmpada</b>: você troca seus pontos por uma <b>letra</b> ou uma <b>pista</b>.` : `Falou uma palavra? Toque aqui no <b>✓</b> pra confirmar mais rápido.` },
   { el: () => $("boardWrap"), text: () => `Cada palavra que você acha <b>preenche esses espaços</b>. Tente completar todos!` },
   { el: () => $("bonusBtn"), skipIf: () => FASES_ON, text: () => `Achou uma palavra que vale mas não está aqui em cima? Ela vai pro <b>banco de bônus</b> e conta pontos igual!` },
@@ -2520,7 +2549,7 @@ function tutWordDone(){
 function endTutorial(){ finishTutorial(false); }
 function finishTutorial(countdown){
   clearInterval(TUT?.handT); TUT = null; G.tutWait = false; G.playing = false;
-  try{ rec && rec.abort(); }catch(e){}
+  micOff();
   $("tut").classList.add("hidden"); $("tutHand").classList.add("hidden"); $("tutArrow").classList.add("hidden");
   store.set("fp_tutorial_done", "1");
   if (countdown) runCountdown(beginRound); else showStartBtn(true);
@@ -2531,7 +2560,7 @@ $("exitBtn").onclick = () => {
   if (!G || G.finished) return;
   SFX.wood();
   exitWasPlaying = G.playing;
-  if (G.playing){ G.playing = false; clearInterval(G.timer); try{ rec && rec.abort(); }catch(e){} }
+  if (G.playing){ G.playing = false; clearInterval(G.timer); micOff(); }
   $("exitBox").classList.remove("hidden");
 };
 $("hoodOk").onclick = () => $("hoodBox").classList.add("hidden");
@@ -2541,7 +2570,7 @@ $("exitStay").onclick = () => {
 };
 $("exitGo").onclick = () => {
   $("exitBox").classList.add("hidden");
-  G.playing = false; G.finished = true; clearInterval(G.timer); try{ rec && rec.abort(); }catch(e){}
+  G.playing = false; G.finished = true; clearInterval(G.timer); micOff();
   if (TUT) { clearInterval(TUT.handT); TUT = null; $("tut").classList.add("hidden"); $("tutHand").classList.add("hidden"); $("tutArrow").classList.add("hidden"); }
   $("startRound").classList.add("hidden"); $("hostSay").classList.remove("show");
   MUSIC.play("menu", MUSIC_FILES.menu);
@@ -2551,7 +2580,7 @@ function beginRound(){
   G.started = true; G.playing = true; G.lastVoice = Date.now();
   SFX.start();
   say(SR ? `${G.mode === "fase" ? `Fase ${G.level}! ` : ""}Pode falar!` : "Arraste o dedo nas letras!", 2200);
-  if (SR && !rec) startRec(); else if (SR) startRec();
+  if (SR) startRec();
   startTimer();
 }
 function updBonus(){ $("bonusCount").textContent = G.bonusFound.length; }
@@ -2561,6 +2590,7 @@ function updHud(){
   $("score").innerHTML = FASES_ON ? `<span style="color:#ffd24a">●</span> ${wallet()}` : I.star + " " + G.score;
 }
 function startTimer(){
+  wakeOn();
   clearInterval(G.timer);
   G.timer = setInterval(() => {
     G.time--; updHud();
@@ -2721,7 +2751,7 @@ function handleResult(res){
 function phon(k){
   if (LANG_ID !== "pt") return k;
   return k.replace(/ch/g, "x").replace(/lh/g, "L").replace(/nh/g, "N").replace(/h/g, "")
-          .replace(/ss/g, "§").replace(/s?c([ei])/g, "§$1").replace(/xc([ei])/g, "§$1")
+          .replace(/ç/g, "§").replace(/ss/g, "§").replace(/s?c([ei])/g, "§$1").replace(/xc([ei])/g, "§$1")
           .replace(/qu([ei])/g, "k$1").replace(/c/g, "k").replace(/g([ei])/g, "j$1")
           .replace(/([aeiou])s([aeiou])/g, "$1z$2").replace(/z$/, "s").replace(/§/g, "s").replace(/(.)\1/g, "$1");
 }
@@ -2745,9 +2775,29 @@ function trySpelled(toks){
   }
   return false;
 }
+let wakeLock = null;
+async function wakeOn(){ try{ if ("wakeLock" in navigator && !wakeLock && document.visibilityState === "visible"){ wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } }catch(e){} }
+function wakeOff(){ try{ wakeLock && wakeLock.release(); }catch(e){} wakeLock = null; }
+let recAlive = false, recStartAt = 0, recDog = null;
+function micOff(){
+  clearInterval(recDog); recDog = null; recAlive = false;
+  if (!rec) return;
+  const r = rec; rec = null;
+  r.onend = r.onresult = r.onerror = r.onstart = null;
+  try{ r.abort(); }catch(e){}
+}
+const micWanted = () => T?.playing || (!FASES_ON && G?.playing);
 function startRec(){
-  try{ rec && rec.abort(); }catch(e){}
+  if (!micWanted()) return;            // em português a voz é só no Desafio de Titãs
+  micOff();
   rec = new SR();
+  rec.onstart = () => { recAlive = true; };
+  recStartAt = Date.now();
+  // cão de guarda: se o microfone cair e não voltar, liga de novo
+  recDog = setInterval(() => {
+    if (!micWanted()){ micOff(); return; }
+    if (!recAlive && Date.now() - recStartAt > 1500) startRec();
+  }, 1200);
   rec.lang = LANG.speech; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 5;
   if (T) T.cmd = {};
   rec.onresult = e => {
@@ -2757,9 +2807,15 @@ function startRec(){
     if (sleeping){ sleeping = false; setHost(restPose, "pop"); }
     for (let i = e.resultIndex; i < e.results.length; i++) handleResult(e.results[i]);
   };
-  rec.onend = () => { if (G?.playing || T?.playing){ if (T) T.cmd = {}; try{ rec.start(); }catch(e){} } };
+  rec.onend = () => {
+    recAlive = false;
+    if (!micWanted()) return;
+    if (T) T.cmd = {};
+    const r = rec; setTimeout(() => { if (rec === r && micWanted()){ recStartAt = Date.now(); try{ r.start(); }catch(e){} } }, 120);
+  };
   rec.onerror = e => {
-    if (e.error === "not-allowed" || e.error === "service-not-allowed") say("Sem microfone: arraste o dedo nas letras!", 2500);
+    recAlive = false;
+    if (e.error === "not-allowed" || e.error === "service-not-allowed"){ micOff(); if (T?.playing) $("tSay").textContent = "Libere o microfone pra jogar!"; else say("Sem microfone: arraste o dedo nas letras!", 2500); }
   };
   try{ rec.start(); }catch(e){}
 }
@@ -2813,7 +2869,7 @@ function boardComplete(){
 }
 function timeUp(){
   clearInterval(G.timer);
-  G.playing = false; try{ rec && rec.stop(); }catch(e){}
+  G.playing = false; micOff();
   if (!G.extended && !G.complete) $("extraBox").classList.remove("hidden"); else finish();
 }
 $("watch").onclick = () => {
@@ -2834,8 +2890,9 @@ $("repNo").onclick = () => report("nao_deveria");
 $("noExtra").onclick = () => { $("extraBox").classList.add("hidden"); finish(); };
 
 async function finish(){
+  wakeOff();
   if (G.finished) return; G.finished = true;
-  G.playing = false; clearInterval(G.timer); try{ rec && rec.stop(); }catch(e){}
+  G.playing = false; clearInterval(G.timer); micOff();
   drag = null; updSwipeWord();
   $("hostSay").classList.remove("show");
   if (G.bflyEl) G.bflyEl.classList.add("gone");
